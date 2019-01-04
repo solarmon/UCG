@@ -1632,6 +1632,9 @@ images = {
 	'android': {
 		'path': Path(cwd) / "img/android-16x16.png"
 	},
+	'gpdxd': {
+		'path': Path(cwd) / "img/gpdxd-16x16.png"
+	},
 	'dir': {
 		'path': Path(cwd) / "img/silk/folder.png"
 	},
@@ -1926,6 +1929,7 @@ tree_target_platform.bind("<ButtonRelease-1>", on_config_tree_select)
 
 tree_target_platform.tag_configure('snesc', image=images['snesc']['image'])
 tree_target_platform.tag_configure('android', image=images['android']['image'])
+tree_target_platform.tag_configure('gpdxd', image=images['gpdxd']['image'])
 tree_target_platform.tag_configure('cog', image=images['cog']['image'])
 tree_target_platform.tag_configure('uae', image=images['uae']['image'])
 tree_target_platform.tag_configure('aga', image=images['aga']['image'])
