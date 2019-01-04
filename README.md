@@ -1,7 +1,8 @@
 # UCG (UAE Configuration Generator) v0.1 beta
-UCG is a Python 3 tool that generates UAE configuration files that are used by various UAE based Amiga emulators and game launchers.
 
-The tool development was inspired by the excellent guides at:
+UCG is a GUI tool developed using **Python 3** that generates UAE configuration files that are used by various UAE based Amiga emulators and game launchers.
+
+The tool creation was inspired by the excellent guides at:
 
 https://www.reddit.com/r/miniSNESmods/comments/8dbqv7/guide_playing_amiga_games_on_the_snes_classic/
 http://lindqvist.synology.me/wordpress/?page_id=182
@@ -10,7 +11,7 @@ and is to help automate the UAE configuration file creation process, providing a
 
 ## Supported Amiga Game File formats
 
-The tool supports differrent Amiga game file formats:
+UCG supports UAE configuration for the following Amiga game file formats:
 
  - ADF (.adf and .zip)
  - HDF (.hdf)
@@ -19,17 +20,22 @@ The tool supports differrent Amiga game file formats:
  
  **Note:** The .zip game file should only contain a single .adf file within it.
  
- Games that span single and multiple files are supported. Multiple disk game files need to meet the following filename convention:
+ Games that span single and multiple files are supported.
  
- (Game Name)__Disk(Disk Number)
+ For **multiple** disk game files need to meet the following filename convention:
+ 
+ (Game Name)__Disk(Disk Value)
   
  **Note:** the "__" is a double underscore
   
  Where:
-   - (Game Name) is the name of the game, which in itself needs to to be in a suitable format - see below.
-   - (Disk Number) is the number of the disk for the game.
-  
-UAE emulators typically only support up to a maximum of 4 (four) floppy drives - so only up to 4 (four) ADF game disk files will be loaded in to floppy drives 0 to 3.
+   - (Game Name) is the name of the game. The game files need to have exactly the same (Game Name) in order to be considered the same game.
+   - (Disk Value) is the number of the disk for the game.
+      - The (Disk Value) can be alphanumeric. But it should either be all numeric, or all alpha.
+ 
+ UCG will sort the all the disks belong to a game in alphanumeric order, with numeric characters first, then alpha characters.
+
+However, UAE emulators typically only support up to a maximum of 4 (four) floppy drives - so onlythe first 4 (four) ADF game disk files (.adf or .zio) will be mapped to floppy drives 0 to 3, respectively.
 
 **Note:** Some Amiga games will only recognise/use the the first floppy drive (DF0:) - so you may still need to use the emulator method to swap out the game disk files.
 
@@ -43,7 +49,23 @@ UCG will allocate the WHDLoad.hdf and .hdf game file as harddrive
 
 ## Directory and filename format
 
-TO DO...
+UCG will only **check** and **warn** for disallowed characters in a game directory or file.
+
+The list of disallowed characters configured in **conf/conf.json** in the **config** section - the default is:
+
+```json
+"disallowed_characters": [" ", "'"],
+```
+
+i.e. space and apostrophes
+
+Note: Removing apostrophes may hinder game data scraping, as some games names do have valid use of apostrophes in them.
+
+### Bulk rename tool
+
+A recommended tool for Windows for bulk renaming files is Advanced Renamer:
+
+https://www.advancedrenamer.com/
 
 ## Installation
 
