@@ -1,9 +1,11 @@
-#target_platform=android-uae4arm
+#target_platform=gpdxd-uae4arm
 #Type=.hdf
 #Chipset=ocs
 
 use_gui=no
 show_leds=true
+input.joymouse_speed_analog=5
+pandora.onscreen=0
 chipset=ocs
 cpu_type=68000
 chipmem_size=4

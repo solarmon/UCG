@@ -1,11 +1,13 @@
-#target_platform=android-uae4arm
-#Type=.hdf
-#Chipset=ocs
+#target_platform=gpdxd-uae4arm
+#Type=.adf
+#Chipset=aga
 
 use_gui=no
 show_leds=true
-chipset=ocs
-cpu_type=68000
+input.joymouse_speed_analog=5
+pandora.onscreen=0
+chipset=aga
+cpu_type=68020
 chipmem_size=4
 fastmem_size=4
 gfx_center_vertical=simple
