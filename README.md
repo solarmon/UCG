@@ -63,17 +63,22 @@ Note: Removing apostrophes may hinder game data scraping, as some games names do
 
 ### Bulk rename tool
 
-A recommended tool for Windows for bulk renaming files is Advanced Renamer:
+A recommended Windows tool for bulk renaming files is **Advanced Renamer**:
 
 https://www.advancedrenamer.com/
 
+**Warning:** Avoid using Advanced Renamer on FAT16/FAT32 partitions - there are issues with 8.3 format filenames related to 'short names' and 'long names'. See the following posts for further details:
+
+https://www.advancedrenamer.com/forum_thread?forum_id=5832
+https://superuser.com/questions/1297658/folder-names-become-uppercase-when-syncing-to-fat32-drive
+
 ## Installation
 
-Extract the release .zip file to that same directory as your target platform 'ROMs' directory.
+Extract the release .zip file to the same directory as your target platform **ROMs** directory.
 
-The UCG tool directory requires to be in a specific location, relative to where the target game and kickstart files are stored.
+The UCG directory requires to be in a specific location, relative to where the target game and kickstart files are stored.
  
-The UCG tool has been developed assuming that it will be used to generate UAE configuration files for a 'remote' target platform. Typically, the game files would be located on a SD card or USB memory stick. It is intended that the UCG tool is installed in this same location.
+UCG has been developed assuming that it will be used to generate UAE configuration files for a 'remote' target platform. Typically, the game files would be located on a SD card or USB memory stick. It is intended that the UCG tool is installed in this same location, and executed from there.
  
 With that in mind, the recommended and supported file structure should be:
 
@@ -132,14 +137,16 @@ The target platform confuguration must be at:
 
 - conf/templates/(target platform)/template.json 
 
-And the UAE templates are must be at:
+And the UAE templates are must be at the following locations:
 
 - conf/templates/(target platform)/uae/ocs/adf/template.uae
 - conf/templates/(target platform)/uae/ocs/hdf/template.uae
 - conf/templates/(target platform)/uae/aga/adf/template.uae
 - conf/templates/(target platform)/uae/aga/hdf/template.uae
 
-There are template files required for OCS/AGA and ADF/HDF as you may want differrent UAE configuration for those different types. If you don't require them to be differrent then just make all the template.uae files the same.
+There are template files in separate **OCS** and **AGA** and **ADF** and **HDF** directories. This intentional and is to allow differrent UAE configurations for those different chipset and game file types. If you don't require for them to be differrent, then just make the template.uae files the same for any or all of the types.
+
+The target platform config and UAE template file is intentially and generially called **template.json** and **template.uae** so that it is easy just to copy an existing target platform directory to make a new one (although, you still need to edit the contents accordingly). 
 
 **Note:** The UCG tools detects where an Amiga game chipset is OCS or AGA by whether is has 'AGA' in the filename.
 
