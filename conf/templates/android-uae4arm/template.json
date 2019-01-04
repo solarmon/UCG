@@ -1,0 +1,13 @@
+{
+	"description": "Android uae4arm",
+	"system": "android",
+	"directory_separator": "/",
+	"parent_path": "/mnt/external_sd",
+	"amiga_whdload_path": "/mnt/external_sd/ROMs/Amiga/WHDLoad",
+	"amiga_whdload_file": "WHDLoad.hdf",
+	"amiga_uae_relative_path": "ROMs/Amiga/UAE",
+	"amiga_games_relative_path": "ROMs/Amiga/Games",
+	"amiga_games_kickstart_path": "/mnt/external_sd/ROMs/Amiga/Kickstarts",
+	"amiga_games_kickstart_rom": "kick31.rom",
+	"amiga_games_kickstart_rom_key": "rom.key"
+}

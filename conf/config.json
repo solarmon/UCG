@@ -1,0 +1,17 @@
+{
+	"config": {
+		"clear_uae_configs": "backup",
+		"generate_uae_configs": 1,
+		"disallowed_characters": [" ", "'"],
+		"max_nr_floppies": 4,
+		"base_hardfile_access": "read-write,32,1,2,512",
+		"snesc_linked_export_show_uae_games": 1,
+		"snesc_linked_export_copy_uae_config": 1,
+		"snesc_linked_export_match_by": "filename"
+	},
+	"debug": {
+		"print_dir_scan": 1,
+		"print_games_dictionary": 1,
+		"dump_base_config": 1
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"description": "NES/SNES Classic/Mini RetroArch P-UAE",
+	"system": "snesc",
+	"directory_separator": "/",
+	"parent_path": "/media",
+	"amiga_whdload_path": "/media/ROMs/Amiga/WHDLoad",
+	"amiga_whdload_file": "WHDLoad.hdf",
+	"amiga_uae_relative_path": "ROMs/Amiga/UAE",
+	"amiga_games_relative_path": "ROMs/Amiga/Games",
+	"amiga_games_kickstart_path": "/media/ROMs/Amiga/Kickstarts",
+	"amiga_games_kickstart_rom": "kick31.rom",
+	"amiga_games_kickstart_rom_key": "rom.key",
+	"snesc_linked_export_games_relative_path": "linked-export/games"
+}
