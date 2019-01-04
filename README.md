@@ -104,18 +104,20 @@ With that in mind, the recommended and supported file structure should be:
    |                                     |     `---[FILE] template.uae
    |                                     `---[DIR] hdf
    |                                           `---[FILE] template.uae
-   `---[DIR] ROMs								                # Example ROMs directory
-          `---[DIR] Amiga		                    # Example Amiga directory
-                +---[DIR] Games					        # This is where your ADF and HDF game files should go. Can contain subdirectories.
-                |     +---[DIR] ADF				      # Example and recommended sub-dir for ADF (.adf and .zip) games. Can contain further subdirectories.
-                |     `---[DIR] HDF				      # Example and recommended sub-dir for HDF (.hdf) games. Can contain further subdirectories.
-                +---[DIR] UAE					          # For the generated .uae config files. This directory will get created by the script if it does not exist.
-                      +---[DIR] (target platform name)   # Each platform will have a subdirectory for its generated UAE config files. Will get created if it does not exist.
-                +---[DIR] WHDLoad
-                |     `---[FILE] WHDLoad.hdf		# The WHDLoad.hdf file
-                `---[DIR] Kickstarts
-                      +---[FILE] kick31.rom		  # The kickstart file
-                      `---[FILE] rom.key			  # The rom.key file for Cloanto Amiga Forever kickstart files.
+   +---[DIR] ROMs								                # Example ROMs directory
+   |      `---[DIR] Amiga		              # Example Amiga directory
+   |            +---[DIR] Games					     # This is where your ADF and HDF game files should go. Can contain subdirectories.
+   |            |     +---[DIR] ADF				  # Example and recommended sub-dir for ADF (.adf and .zip) games. Can contain further subdirectories.
+   |            |     `---[DIR] HDF				  # Example and recommended sub-dir for HDF (.hdf) games. Can contain further subdirectories.
+   |            +---[DIR] UAE					       # For the generated .uae config files. This directory will get created by the script if it does not exist.
+   |                  +---[DIR] (target platform name)   # Each platform will have a subdirectory for its generated UAE config files. Will get created if it does not exist.
+   |            +---[DIR] WHDLoad
+   |            |     `---[FILE] WHDLoad.hdf		# The WHDLoad.hdf file
+   |            `---[DIR] Kickstarts
+   |                  +---[FILE] kick31.rom		  # The kickstart file
+   |                  `---[FILE] rom.key			  # The rom.key file for Cloanto Amiga Forever kickstart files.
+   `---[DIR] linked-export     # SNES Classic Hakchi2 CE directory (for linked export mode)
+          `---[DIR] games      # This is where the Hakchi2 CE .uae configs appear (in sub directores for each game).
 </pre>
 
 The **ROMs** directory is where you should have your game and kickstart files.
@@ -131,7 +133,7 @@ Some Example target platform comfiguration and UAE templates have been provided 
 
 The configuration and templates for these target platform is based on the directory structure shown above.
 
-The UCG tool will scan the *UCG/conf/templates* directory. The name of the subdirectory will be used as the target platform name, and the exact directory and file structure is expected to exist - as shown above.
+UCG will scan the *UCG/conf/templates* directory. The name of the subdirectory will be used as the target platform name, and the exact directory and file structure is expected to exist - as shown above.
 
 The target platform confuguration must be at:
 
@@ -148,7 +150,7 @@ There are template files in separate **OCS** and **AGA** and **ADF** and **HDF**
 
 The target platform config and UAE template file is intentially and generially called **template.json** and **template.uae** so that it is easy just to copy an existing target platform directory to make a new one (although, you still need to edit the contents accordingly). 
 
-**Note:** The UCG tools detects where an Amiga game chipset is OCS or AGA by whether is has 'AGA' in the filename.
+UCG detects whether an Amiga game chipset is OCS or AGA. This is done by whether is has 'AGA' in the filename or not. The game type is them determined - whether is ADF or HDF. The appropriate UAE template is then used based on these two types.
 
 ### Python script or executable?
 
