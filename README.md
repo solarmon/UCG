@@ -110,7 +110,7 @@ With that in mind, the recommended and supported file structure should be:
    |            |     +---[DIR] ADF				  # Example and recommended sub-dir for ADF (.adf and .zip) games. Can contain further subdirectories.
    |            |     `---[DIR] HDF				  # Example and recommended sub-dir for HDF (.hdf) games. Can contain further subdirectories.
    |            +---[DIR] UAE					       # For the generated .uae config files. This directory will get created by the script if it does not exist.
-   |                  +---[DIR] (target platform name)   # Each platform will have a subdirectory for its generated UAE config files. Will get created if it does not exist.
+   |            |     +---[DIR] (target platform name)   # Each platform will have a subdirectory for its generated UAE config files. Will get created if it does not exist.
    |            +---[DIR] WHDLoad
    |            |     `---[FILE] WHDLoad.hdf		# The WHDLoad.hdf file
    |            `---[DIR] Kickstarts
