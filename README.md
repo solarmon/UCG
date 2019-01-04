@@ -105,6 +105,7 @@ With that in mind, the recommended and supported file structure should be:
                 |     +---[DIR] ADF				      # Example and recommended sub-dir for ADF (.adf and .zip) games. Can contain further subdirectories.
                 |     `---[DIR] HDF				      # Example and recommended sub-dir for HDF (.hdf) games. Can contain further subdirectories.
                 +---[DIR] UAE					          # For the generated .uae config files. This directory will get created by the script if it does not exist.
+                      +---[DIR] (target platform name)   # Each platform will have a subdirectory for its generated UAE config files. Will get created if it does not exist.
                 +---[DIR] WHDLoad
                 |     `---[FILE] WHDLoad.hdf		# The WHDLoad.hdf file
                 `---[DIR] Kickstarts
@@ -161,11 +162,12 @@ This only been has been tested on a Windows 10 environment.
 TO DO...
 
  - Launch ucg.py / ucg.exe
- - Go to Target Platforms tab
- - Select a target platform
- - Click the 'Start' button
+ - Go to **Target Platforms** tab
+   - Can view target Platform configs and UAE template files
+ - Select a **Target Platform** from the list
+ - Click the **Start** button
  - New tabs will be created for:
-   - Game Files          *(List of found game files)*
-   - Game List           *(List of found games)
-   - UAE Configs         *(List of generated UAE configurations)*
-   - SNESC Classic       *(If applicable. List of 'linked-exported' games)*
+   - **Game Files**          *(List of found game files)*
+   - **Game List**           *(List of found games)
+   - **UAE Configs**         *(List of generated UAE configurations)*
+   - **SNESC Classic**       *(If applicable. List of 'linked-exported' games)*
