@@ -116,7 +116,7 @@ With that in mind, the recommended and supported file structure should be:
    |            `---[DIR] Kickstarts
    |                  +---[FILE] kick31.rom		  # The kickstart file
    |                  `---[FILE] rom.key			  # The rom.key file for Cloanto Amiga Forever kickstart files.
-   `---[DIR] linked-export     # SNES Classic Hakchi2 CE directory (for linked export mode)
+   `---[DIR] linked-export     # Example SNES Classic Hakchi2 CE directory name (for linked export mode)
           `---[DIR] games      # This is where the Hakchi2 CE .uae configs appear (in sub directores for each game).
 </pre>
 
