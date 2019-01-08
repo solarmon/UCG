@@ -27,7 +27,7 @@ colorama.init()
 ##
 
 program = "UCG (UAE Configuration Generator)"
-version = "v0.1 beta"
+version = "v0.2 beta"
 
 print(Style.BRIGHT)
 print("=======================================================================")
