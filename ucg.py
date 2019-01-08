@@ -477,7 +477,51 @@ def generate_games_dictionary():
 					
 					# Add to games array
 					games.update(game_array)
-		
+			
+			if(file_extension == '.slave') or (file_extension == '.Slave'):
+				if(ucg_conf['debug']['print_dir_scan']):
+					print("  +---[GAME] ",Fore.GREEN,filename,Style.RESET_ALL," (",file_extension,")",sep='')
+					print("         +---[Slave]",fname)
+				
+				if(filename in games.keys()):	## If already exist - i.e. duplicate
+					
+					if(ucg_conf['debug']['print_dir_scan']):
+						print(Fore.RED + "### Duplicate Found ###" + Style.RESET_ALL)
+							
+					duplicates = {
+						duplicates_count: {
+							'Dir':	dirName,
+							'File':	fname
+						}
+					}
+					
+					if "Duplicates" in games[filename]:
+						games[filename]['Duplicates'].update(duplicates)
+					else:
+						games[filename]['Duplicates'] = duplicates
+					
+					duplicates_count += 1
+				
+				else:	## Does not exist - i.e. not duplicate
+				
+					## Creat disks array
+					disk_array = {
+							'1': fname
+					}
+					
+					## Create game array
+					game_array = {
+						filename: {
+							'Game': filename,
+							'Dir': dirName,
+							'Type': file_extension.lower(),
+							'Disks': disk_array
+							}
+					}
+					
+					# Add to games array
+					games.update(game_array)
+				
 		if(ucg_conf['debug']['print_dir_scan']):
 			print()
 
@@ -923,7 +967,9 @@ def create_game_files_tab():
 			tree_game_files.insert('', 'end', dirName, text=dirName, values=('[DIR]',''), tags = ('directory',))
 		else:
 			statinfo = os.stat(dirName)
-			tree_game_files.insert(Path(dirName).parent, 'end', dirName, text=dirName, values=('[DIR]',''), tags = ('directory',))
+			#tree_game_files.insert(Path(dirName).parent, 'end', dirName, text=dirName, values=('[DIR]',''), tags = ('directory',))
+			
+			tree_game_files.insert(Path(dirName).parent, 'end', dirName, text=os.path.basename(dirName), values=('[DIR]',''), tags = ('directory',))
 
 		for fname in fileList:
 			
@@ -943,6 +989,10 @@ def create_game_files_tab():
 				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.zip',fname_tag,))
 			if(file_extension == ".hdf"):
 				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.hdf',fname_tag,))
+			if(file_extension == ".slave") or (file_extension == ".Slave"):
+				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.slave',fname_tag,))
+			#if(file_extension == ".info") or (file_extension == ".Info"):
+			#	tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.info',fname_tag,))
 
 	tree_game_files.tag_configure('issue', background='#ffdddd')
 	tree_game_files.tag_configure('directory', background='#E8E8E8', image=images['dir']['image'])
@@ -1009,6 +1059,8 @@ def create_games_list_tab():
 				game_tag = "compress_multiple"
 		if(game['Type'] == '.hdf'):
 			game_tag = ".hdf"
+		if(game['Type'] == '.slave') or (game['Type'] == '.Slave'):
+			game_tag = "slave"
 						
 		#tree_game_list.insert('', 'end', game_name, text=game_name, values=(game['Type'], game['Chipset']), tags = (game_tag,issues_tag,))
 		tree_game_list.insert('', 'end', game_name, text=game_name, values=(game['Type'], game['Chipset']), tags = (game_tag,issues_tag,))
@@ -1031,6 +1083,7 @@ def create_games_list_tab():
 	tree_game_list.tag_configure('drive_disk', image=images['drive_disk']['image'])
 	tree_game_list.tag_configure('drive_compress', image=images['drive_compress']['image'])
 	tree_game_list.tag_configure('drive', image=images['drive']['image'])
+	tree_game_list.tag_configure('slave', image=images['dir']['image'])
 
 	tree_game_list.pack(expand='yes', fill='both')
 
@@ -1078,6 +1131,9 @@ def create_uae_configs_tab():
 			
 		if(game['Type'] == '.hdf'):
 			game_type = 'hdf'
+		
+		if(game['Type'] == '.slave'):
+			game_type = 'slave'
 		
 		##
 		##
@@ -1184,7 +1240,30 @@ def create_uae_configs_tab():
 			print("game_dir_ralative_path:",game_dir_ralative_path)
 			print("final_path:",final_path)
 			print()
+		
+		## slave
+		if(game['Type'] == '.slave'):
 			
+			
+			
+			## WHDLoad boot dir
+			if(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "dir"):
+				uae_file_contents += "filesystem2=rw,DH0:SYSTEM:"  + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_dir'] + ",0" + "\n"
+			elif(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "hdf"):
+				uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
+				
+			
+			game_dir = game['Dir']
+			game_dir_ralative_path = game_dir.replace(ucg_conf['config']['target_games_path'], '')
+			game_dir_ralative_path = game_dir_ralative_path.replace("\\", target_platform_directory_separator)
+			game_dir_ralative_path = game_dir_ralative_path.replace("/", target_platform_directory_separator)
+			#final_path = target_platform_config[target_platform]['config']['parent_path'] + target_platform_directory_separator + str(target_platform_config[target_platform]['config']['amiga_games_relative_path']) + game_dir_ralative_path + target_platform_directory_separator + game['Disks']['1']
+			final_path = target_platform_config[target_platform]['config']['parent_path'] + target_platform_directory_separator + str(target_platform_config[target_platform]['config']['amiga_games_relative_path']) + game_dir_ralative_path
+			final_path = final_path.replace("\\", target_platform_directory_separator)
+			final_path = final_path.replace("/", target_platform_directory_separator)
+			
+			uae_file_contents += "filesystem2=rw,DH1:" + game['Game'] + game['Type'] + ":" + final_path + ",-128" + "\n"
+		
 		print(Fore.YELLOW,end='');
 		print(uae_file_contents)
 		print(Style.RESET_ALL,end='');
@@ -1821,6 +1900,9 @@ for platform_index, platform_value in target_platform_config.items():
 	## Add uae - ocs - hdf node
 	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_hdf" , text='hdf', tag=('.hdf',))
 	
+	## Add uae - ocs - slave node
+	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_slave" , text='slave', tag=('.slave',))
+	
 	## Add uae - aga node
 	tree_target_platform.insert(platform_index + "_uae", 'end', platform_index + "_uae_aga" , text='aga', tag=('aga',))
 	
@@ -1829,6 +1911,9 @@ for platform_index, platform_value in target_platform_config.items():
 	
 	## Add uae - aga - hdf node
 	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_hdf" , text='hdf', tag=('.hdf',))
+	
+	## Add uae - aga - slave node
+	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_slave" , text='slave', tag=('.slave',))
 
 ## Select first in target platform list
 tree_target_platform.selection_set(list(target_platform_config.keys())[0])
@@ -1929,6 +2014,7 @@ tree_target_platform.bind("<ButtonRelease-1>", on_config_tree_select)
 
 tree_target_platform.tag_configure('snesc', image=images['snesc']['image'])
 tree_target_platform.tag_configure('android', image=images['android']['image'])
+tree_target_platform.tag_configure('windows', image=images['windows']['image'])
 tree_target_platform.tag_configure('gpdxd', image=images['gpdxd']['image'])
 tree_target_platform.tag_configure('cog', image=images['cog']['image'])
 tree_target_platform.tag_configure('uae', image=images['uae']['image'])
@@ -1938,6 +2024,7 @@ tree_target_platform.tag_configure('uae-aga', image=images['uae-aga']['image'])
 tree_target_platform.tag_configure('uae-ocs', image=images['uae-ocs']['image'])
 tree_target_platform.tag_configure('.adf', image=images['.adf']['image'])
 tree_target_platform.tag_configure('.hdf', image=images['.hdf']['image'])
+tree_target_platform.tag_configure('.slave', image=images['dir']['image'])
 
 tab_control.pack(expand=1, fill='both')
 
