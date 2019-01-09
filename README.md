@@ -1,4 +1,4 @@
-# UCG (UAE Configuration Generator) v0.1 beta
+# UCG (UAE Configuration Generator) v0.2 beta
 
 UCG is a GUI tool developed using **Python 3** that generates UAE configuration files that are used by various UAE based Amiga emulators and game launchers.
 
@@ -14,7 +14,8 @@ and is to help automate the UAE configuration file creation process, providing a
 UCG supports UAE configuration for the following Amiga game file formats:
 
  - ADF (.adf and .zip)
- - HDF (.hdf)
+ - WHDload HDF (.hdf)
+ - WHDLoad Slave (.slave)
  
 ### ADF (.adf and .zip) files
  
@@ -39,13 +40,17 @@ However, UAE emulators typically only support up to a maximum of 4 (four) floppy
 
 **Note:** Some Amiga games will only recognise/use the the first floppy drive (DF0:) - so you may still need to use the emulator method to swap out the game disk files.
 
-### HDF (.hdf) files
+### WHDLoad HDF (.hdf) files
  
 HDF based game files are from WHDLoad based games. Use the following guide to create your WHLoad.hdf and .hdf game files.
  
 http://lindqvist.synology.me/wordpress/?page_id=182
  
 UCG will allocate the WHDLoad.hdf and .hdf game file as harddrive
+
+### WHDLoad Slave (.slave) files
+
+TO DO
 
 ## Directory and filename format
 
@@ -108,11 +113,13 @@ With that in mind, the recommended and supported file structure should be:
    |      `---[DIR] Amiga		              # Example Amiga directory
    |            +---[DIR] Games					     # This is where your ADF and HDF game files should go. Can contain subdirectories.
    |            |     +---[DIR] ADF				  # Example and recommended sub-dir for ADF (.adf and .zip) games. Can contain further subdirectories.
-   |            |     `---[DIR] HDF				  # Example and recommended sub-dir for HDF (.hdf) games. Can contain further subdirectories.
+   |            |     +---[DIR] HDF				  # Example and recommended sub-dir for HDF (.hdf) games. Can contain further subdirectories.
+   |            |     +---[DIR] WHDL     # Example and recommended sub-dir for WHDLoad game directories. Can contain further subdirectories.
    |            +---[DIR] UAE					       # For the generated .uae config files. This directory will get created by the script if it does not exist.
    |            |     +---[DIR] (target platform name)   # Each platform will have a subdirectory for its generated UAE config files. Will get created if it does not exist.
    |            +---[DIR] WHDLoad
-   |            |     `---[FILE] WHDLoad.hdf		# The WHDLoad.hdf file
+   |            |     +---[FILE] WHDLoad.hdf		# The WHDLoad boot partition - hdf version
+   |            |     +---[DIR] WHDLoad       # The WHDLoad boot partition - directory version
    |            `---[DIR] Kickstarts
    |                  +---[FILE] kick31.rom		  # The kickstart file
    |                  `---[FILE] rom.key			  # The rom.key file for Cloanto Amiga Forever kickstart files.
@@ -143,8 +150,10 @@ And the UAE templates are must be at the following locations:
 
 - conf/templates/(target platform)/uae/ocs/adf/template.uae
 - conf/templates/(target platform)/uae/ocs/hdf/template.uae
+- conf/templates/(target platform)/uae/ocs/slave/template.uae
 - conf/templates/(target platform)/uae/aga/adf/template.uae
 - conf/templates/(target platform)/uae/aga/hdf/template.uae
+- conf/templates/(target platform)/uae/aga/slave/template.uae
 
 There are template files in separate **OCS** and **AGA** and **ADF** and **HDF** directories. This intentional and is to allow differrent UAE configurations for those different chipset and game file types. If you don't require for them to be differrent, then just make the template.uae files the same for any or all of the types.
 
