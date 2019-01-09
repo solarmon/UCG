@@ -1,7 +1,3 @@
-#target_platform=snesc-puae
-#Type=.hdf
-#Chipset=ocs
-
 use_gui=no
 show_leds=true
 chipset=ocs

@@ -923,6 +923,10 @@ def start():
 	status_message = "\nDone!\n"
 	global_widget_list['text_target_platform'].insert('end', status_message)
 	
+	print()
+	print("Done!")
+	print()
+	
 	update_progressbar(100)
 	
 	#
@@ -1214,7 +1218,14 @@ def create_uae_configs_tab():
 		if(game['Type'] == '.hdf'):
 
 			## WHDLoad.hdf
-			uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
+			#uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
+			
+			## WHDLoad boot dir
+			if(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "dir"):
+				uae_file_contents += "filesystem2=rw,DH0:SYSTEM:"  + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_dir'] + ",0" + "\n"
+			elif(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "hdf"):
+				uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
+			
 			
 			game_dir = game['Dir']
 			game_dir_ralative_path = game_dir.replace(ucg_conf['config']['target_games_path'], '')
@@ -1224,7 +1235,8 @@ def create_uae_configs_tab():
 			final_path = final_path.replace("\\", target_platform_directory_separator)
 			final_path = final_path.replace("/", target_platform_directory_separator)
 			
-			uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + final_path + "\n"
+			#uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + final_path + "\n"
+			uae_file_contents += "hardfile2=rw,DH1:" + final_path + "," + ucg_conf['config']['base_hardfile2_access'] + "\n"
 			
 			'''
 			print()

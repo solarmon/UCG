@@ -1,7 +1,3 @@
-#target_platform=android-uae4arm
-#Type=.hdf
-#Chipset=ocs
-
 use_gui=no
 show_leds=true
 chipset=ocs

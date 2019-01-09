@@ -2,14 +2,14 @@
 	"description": "Windows WinUAE",
 	"system": "windows",
 	"directory_separator": "\\",
-	"parent_path": "H:",
-	"amiga_whdload_path": "H:\\ROMs\\Amiga\\WHDLoad",
+	"parent_path": "W:",
+	"amiga_whdload_path": "W:\\ROMs\\Amiga\\WHDLoad",
 	"amiga_whdload_type": "dir",
 	"amiga_whdload_file": "WHDLoad.hdf",
 	"amiga_whdload_dir": "WHDLoad-Game-Launcher",
 	"amiga_uae_relative_path": "ROMs\\Amiga\\UAE",
 	"amiga_games_relative_path": "ROMs\\Amiga\\Games",
-	"amiga_games_kickstart_path": "H:\\ROMs\\Amiga\\Kickstarts",
+	"amiga_games_kickstart_path": "W:\\ROMs\\Amiga\\Kickstarts",
 	"amiga_games_kickstart_rom": "kick31.rom",
 	"amiga_games_kickstart_rom_key": "rom.key"
 }

@@ -1,7 +1,3 @@
-#target_platform=snesc-puae
-#Type=.adf
-#Chipset=aga
-
 use_gui=no
 show_leds=true
 chipset=aga

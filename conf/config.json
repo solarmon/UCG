@@ -5,6 +5,7 @@
 		"disallowed_characters": [" ", "'"],
 		"max_nr_floppies": 4,
 		"base_hardfile_access": "read-write,32,1,2,512",
+		"base_hardfile2_access": "32,1,2,512,0,,uae1",
 		"snesc_linked_export_show_uae_games": 1,
 		"snesc_linked_export_copy_uae_config": 1,
 		"snesc_linked_export_match_by": "filename"

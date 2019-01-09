@@ -1,7 +1,3 @@
-#target_platform=gpdxd-uae4arm
-#Type=.hdf
-#Chipset=ocs
-
 use_gui=no
 show_leds=true
 input.joymouse_speed_analog=5
