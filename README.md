@@ -1,4 +1,10 @@
-# UCG (UAE Configuration Generator) v0.2 beta
+# UCG (UAE Configuration Generator)
+
+# Latest release
+
+[v0.3-beta](https://github.com/solarmon/UCG/releases/tag/v0.3-beta)
+
+Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
 
 UCG is a GUI tool developed using **Python 3** that generates UAE configuration files that are used by various UAE based Amiga emulators and game launchers.
 
