@@ -1,10 +1,12 @@
 # UCG (UAE Configuration Generator)
 
-# Latest release
+## Latest release
 
 [v0.3-beta](https://github.com/solarmon/UCG/releases/tag/v0.3-beta)
 
 Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
+
+## Summary
 
 UCG is a GUI tool developed using **Python 3** that generates UAE configuration files that are used by various UAE based Amiga emulators and game launchers.
 
@@ -142,7 +144,9 @@ The **ROMs** directory is where you should have your game and kickstart files.
 Some Example target platform comfiguration and UAE templates have been provided for the following:
 
  - android-uae4arm (Android uae4arm)
+ - gpdxd-uae4arm (GPD XD uae4arm)
  - snesc-puae (SNES Classic Retroarch P-UAE)
+ - windows-winuae (Windows WinUAE)
 
 The configuration and templates for these target platform is based on the directory structure shown above.
 
@@ -169,7 +173,7 @@ UCG detects whether an Amiga game chipset is OCS or AGA. This is done by whether
 
 ### Python script or executable?
 
-You can choose to download and run UCG as a python script or as a Windows executable.
+You can choose to run UCG as a python script or as a Windows executable.
 
 #### Run as Python script
 
