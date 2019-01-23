@@ -2,9 +2,11 @@
 
 ## Latest release
 
-[v0.4-beta](https://github.com/solarmon/UCG/releases/tag/v0.4-beta)
+[v0.5-beta](https://github.com/solarmon/UCG/releases/tag/v0.5-beta)
 
-Currently only tested and supported for **Windows 10 64-bit**
+32bit and 64bit executables are now available.
+
+Currently only tested on **Windows 10 64-bit**
 
 Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
 
