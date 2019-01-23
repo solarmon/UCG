@@ -2,7 +2,7 @@
 
 ## Latest release
 
-[v0.3-beta](https://github.com/solarmon/UCG/releases/tag/v0.3-beta)
+[v0.4-beta](https://github.com/solarmon/UCG/releases/tag/v0.4-beta)
 
 Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
 
@@ -23,7 +23,9 @@ UCG supports UAE configuration for the following Amiga game file formats:
 
  - ADF (.adf and .zip)
  - WHDload HDF (.hdf)
- - WHDLoad Slave (.slave)
+ - WHDLoad ZIP (.zip)
+ - WHDLoad LHA (.lha)
+ - WHDLoad Directory (.slave)
  
 ### ADF (.adf and .zip) files
  
@@ -54,11 +56,19 @@ HDF based game files are from WHDLoad based games. Use the following guide to cr
  
 http://lindqvist.synology.me/wordpress/?page_id=182
  
-UCG will allocate the WHDLoad.hdf and .hdf game file as harddrive
+UCG will allocate the WHDLoad.hdf and .hdf game file as harddrive2
 
-### WHDLoad Slave (.slave) files
+### WHDLoad ZIP (.zip) ###
 
-TO DO
+TO DO...
+
+### WHDLoad LHA (.lha) ###
+
+TO DO...
+
+### WHDLoad Directory (.slave) files
+
+TO DO...
 
 ## Directory and filename format
 
@@ -108,23 +118,24 @@ With that in mind, the recommended and supported file structure should be:
    |                         +---[FILE] template.json         # The target platform configuration file
    |                         `---[DIR] uae                    # The target platform UAE templates directory
    |                               +---[DIR] aga
-   |                               |     +---[DIR] adf
+   |                               |     +---[DIR] ADF
    |                               |     |     `---[FILE] template.uae
-   |                               |     `---[DIR] hdf
+   |                               |     `---[DIR] WHDLoad
    |                               |           `---[FILE] template.uae
    |                               `---[DIR] ocs
-   |                                     +---[DIR] adf
+   |                                     +---[DIR] ADF
    |                                     |     `---[FILE] template.uae
-   |                                     `---[DIR] hdf
+   |                                     `---[DIR] WHDLoad
    |                                           `---[FILE] template.uae
    +---[DIR] ROMs								                # Example ROMs directory
    |      `---[DIR] Amiga		              # Example Amiga directory
    |            +---[DIR] Games					     # This is where your ADF and HDF game files should go. Can contain subdirectories.
    |            |     +---[DIR] ADF				  # Example and recommended sub-dir for ADF (.adf and .zip) games. Can contain further subdirectories.
-   |            |     +---[DIR] HDF				  # Example and recommended sub-dir for HDF (.hdf) games. Can contain further subdirectories.
-   |            |     +---[DIR] WHDL     # Example and recommended sub-dir for WHDLoad game directories. Can contain further subdirectories.
+   |            |     +---[DIR] WHDLoad     # Example and recommended sub-dir for WHDLoad game directories. Can contain further subdirectories.
    |            +---[DIR] UAE					       # For the generated .uae config files. This directory will get created by the script if it does not exist.
-   |            |     +---[DIR] (target platform name)   # Each platform will have a subdirectory for its generated UAE config files. Will get created if it does not exist.
+   |            |     +---[DIR] (target platform name)   # Each platform will have subdirectories for its generated UAE config files. Will get created if it does not exist.
+   |            |           +---[DIR] ADF     # For ADF based games .uae configs
+   |            |           `---[DIR] WHDLoad # For WHDLoad based games .uae configs
    |            +---[DIR] WHDLoad
    |            |     +---[FILE] WHDLoad.hdf		# The WHDLoad boot partition - hdf version
    |            |     +---[DIR] WHDLoad       # The WHDLoad boot partition - directory version
@@ -158,18 +169,16 @@ The target platform confuguration must be at:
 
 And the UAE templates are must be at the following locations:
 
-- conf/templates/(target platform)/uae/ocs/adf/template.uae
-- conf/templates/(target platform)/uae/ocs/hdf/template.uae
-- conf/templates/(target platform)/uae/ocs/slave/template.uae
-- conf/templates/(target platform)/uae/aga/adf/template.uae
-- conf/templates/(target platform)/uae/aga/hdf/template.uae
-- conf/templates/(target platform)/uae/aga/slave/template.uae
+- conf/templates/(target platform)/uae/ocs/ADF/template.uae
+- conf/templates/(target platform)/uae/ocs/WHDLoad/template.uae
+- conf/templates/(target platform)/uae/aga/ADF/template.uae
+- conf/templates/(target platform)/uae/aga/WHDLoad/template.uae
 
-There are template files in separate **OCS** and **AGA** and **ADF** and **HDF** directories. This intentional and is to allow differrent UAE configurations for those different chipset and game file types. If you don't require for them to be differrent, then just make the template.uae files the same for any or all of the types.
+There are template files in separate **OCS** and **AGA** and **ADF** and **WHDLoad** directories. This intentional and is to allow differrent UAE configurations for those different chipset and game file types. If you don't require for them to be differrent, then just make the template.uae files the same for any or all of the types.
 
 The target platform config and UAE template file is intentially and generially called **template.json** and **template.uae** so that it is easy just to copy an existing target platform directory to make a new one (although, you still need to edit the contents accordingly). 
 
-UCG detects whether an Amiga game chipset is OCS or AGA. This is done by whether is has 'AGA' in the filename or not. The game type is them determined - whether is ADF or HDF. The appropriate UAE template is then used based on these two types.
+UCG detects whether an Amiga game chipset is OCS or AGA. This is done by whether is has 'AGA' in the filename or not. The game type is them determined - whether is ADF or WHDLoad. The appropriate UAE template is then used based on these two types.
 
 ### Python script or executable?
 
@@ -178,6 +187,10 @@ You can choose to run UCG as a python script or as a Windows executable.
 #### Run as Python script
 
 To run as a python script you need to have the Python 3 environment and required modules installed.
+
+The following packages are require if running as a script:
+
+TO DO...
 
 #### Run as Python executable
 
