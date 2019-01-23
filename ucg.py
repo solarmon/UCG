@@ -3,6 +3,9 @@ import os
 import json
 import platform
 
+import zipfile
+from lhafile import LhaFile
+
 from pathlib import Path
 
 from hurry.filesize import size
@@ -27,7 +30,7 @@ colorama.init()
 ##
 
 program = "UCG (UAE Configuration Generator)"
-version = "v0.2 beta"
+version = "v0.4-beta"
 
 print(Style.BRIGHT)
 print("=======================================================================")
@@ -85,29 +88,19 @@ else :
 # User Config
 #
 
-
-#target_platform - which target_platform to generate for:
-#target_platform = "android-puae";				# Android RetroArch P-UAE
-#target_platform = "android-uae4arm";			# Android uae4arm
-#target_platform = "snesc-puae";				# NES/SNES Classic/Mini RetroArch P-UAE
-#target_platform = "snesc-uae4arm";			# NES/SNES Classic/Mini RetroArch uae4arm
-
-target_platform = ''
-
 # Default chipset:
-chipset = "ocs";	
+chipset = "ocs";
 #chipset = "aga";
 
 #
 # Target platform configs
 #
 
+target_platform = ''
 target_platform_config = {}
 
-
 def load_target_platform_config():
-	
-	
+
 	#
 	# Load configs from file
 	#
@@ -316,6 +309,11 @@ def generate_games_dictionary():
 			
 			##
 			
+			#
+			# .zip or .adf
+			#
+			# Note: .zip could either be for ADF or WHDLoad games
+			
 			if (file_extension == '.zip') or (file_extension == '.adf'):
 			
 				game_disk = filename.split('__')
@@ -381,7 +379,8 @@ def generate_games_dictionary():
 							#game_name: {
 								'Game': game_name,
 								'Dir': dirName,
-								'Type': file_extension,
+								'File Type': file_extension,
+								'Game Type': '',
 								'Disks': disk_array
 							#}
 						}
@@ -394,7 +393,7 @@ def generate_games_dictionary():
 				
 					if(ucg_conf['debug']['print_dir_scan']):
 						print('  +---[GAME] ',Fore.GREEN, filename, Style.RESET_ALL,' (',file_extension,')',sep='')
-						print("         +---['1'] ",fname,sep='')
+						print("         +---[1] ",fname,sep='')
 						
 					if filename in games.keys(): # single-disk game already added - i.e. duplicate
 						
@@ -421,7 +420,8 @@ def generate_games_dictionary():
 						game_array = {
 							'Game': filename,
 							'Dir': dirName,
-							'Type': file_extension,
+							'File Type': file_extension,
+							'Game Type': '',
 							'Disks': {
 								'1': fname
 							}
@@ -430,9 +430,77 @@ def generate_games_dictionary():
 						## Add to games array
 						games[filename] = game_array
 				
+				# Zip file - show contents
+				if (file_extension == '.zip'):
+					
+					zf = zipfile.ZipFile(Path(dirName) / fname, 'r')
+					
+					for zipfile_entry in zf.namelist():
+						zfilename, zfile_extension = os.path.splitext(zipfile_entry)
+						
+						
+						if(zfile_extension == '.adf'):
+							print("              +---" + zipfile_entry + " (" + zfile_extension +  ")")
+							
+						
+						if((zfile_extension == '.slave') or (zfile_extension == '.Slave')):
+							print("              +---" + zipfile_entry + " (" + zfile_extension +  ")")
+							
+					
 				if(ucg_conf['debug']['print_dir_scan']):
 					print()
+			
+			#
+			# .lha
+			#
+			if (file_extension == '.lha'):
+				if(ucg_conf['debug']['print_dir_scan']):
+					print("  +---[GAME] ",Fore.GREEN,filename,Style.RESET_ALL," (",file_extension,")",sep='')
+					print("         +---[Disk1]",fname)
 				
+				if(filename in games.keys()):	## If already exist - i.e. duplicate
+					
+					if(ucg_conf['debug']['print_dir_scan']):
+						print(Fore.RED + "### Duplicate Found ###" + Style.RESET_ALL)
+							
+					duplicates = {
+						duplicates_count: {
+							'Dir':	dirName,
+							'File':	fname
+						}
+					}
+					
+					if "Duplicates" in games[filename]:
+						games[filename]['Duplicates'].update(duplicates)
+					else:
+						games[filename]['Duplicates'] = duplicates
+					
+					duplicates_count += 1
+				
+				else:	## Does not exist - i.e. not duplicate
+				
+					## Creat disks array
+					disk_array = {
+							'1': fname
+					}
+					
+					## Create game array
+					game_array = {
+						filename: {
+							'Game': filename,
+							'Dir': dirName,
+							'File Type': file_extension,
+							'Game Type': '',
+							'Disks': disk_array
+							}
+					}
+					
+					# Add to games array
+					games.update(game_array)
+			
+			#
+			# .hdf
+			#			
 			if (file_extension == '.hdf'):
 				
 				if(ucg_conf['debug']['print_dir_scan']):
@@ -470,7 +538,8 @@ def generate_games_dictionary():
 						filename: {
 							'Game': filename,
 							'Dir': dirName,
-							'Type': file_extension,
+							'File Type': file_extension,
+							'Game Type': '',
 							'Disks': disk_array
 							}
 					}
@@ -478,6 +547,7 @@ def generate_games_dictionary():
 					# Add to games array
 					games.update(game_array)
 			
+			# .slave
 			if(file_extension == '.slave') or (file_extension == '.Slave'):
 				if(ucg_conf['debug']['print_dir_scan']):
 					print("  +---[GAME] ",Fore.GREEN,filename,Style.RESET_ALL," (",file_extension,")",sep='')
@@ -514,7 +584,8 @@ def generate_games_dictionary():
 						filename: {
 							'Game': filename,
 							'Dir': dirName,
-							'Type': file_extension.lower(),
+							'File Type': file_extension.lower(),
+							'Game Type': '',
 							'Disks': disk_array
 							}
 					}
@@ -534,7 +605,7 @@ def sort_games_disks_order():
 	for game_name,game in games.items():
 	
 		# Only for .adf or .zip games
-		if((game['Type'] == '.zip') or (game['Type'] == '.adf')):
+		if((game['File Type'] == '.zip') or (game['File Type'] == '.adf')):
 		
 			# Only if more than one disk
 			if(len(game['Disks'].items()) > 1):
@@ -584,7 +655,98 @@ def sort_games_dict():
 		#print("Game: ", key)
 	
 	games = temp_games_dict
+
+def detect_games_type():
+
+	print()
+	print("###")
+	print("Detecting Game Type")
+	print("###")
 	
+	for game_name, game in games.items():
+		
+		#print()
+		
+		#print("Game:",game_name)
+		#print("Game:",game)
+		
+		if(game['File Type'] == ".adf"):
+			#print(".adf")
+			game['Game Type'] = "ADF"
+			
+		if(game['File Type'] == ".hdf"):
+			#print(".hdf")
+			game['Game Type'] = "WHDLoad"
+			
+		if((game['File Type'] == ".slave") or (game['File Type'] == ".Slave")):
+			#print(".slave")
+			game['Game Type'] = "WHDLoad"
+		
+		
+		
+		if(game['File Type'] == ".zip"):
+			#print(".zip")
+			
+			zfile_extensions = {
+				'adf': 0,
+				'slave': 0
+			}
+					
+			for disk_id, disk in game['Disks'].items():
+			
+				#print("Disk:", disk)
+				
+				zf = zipfile.ZipFile(Path(game['Dir']) / disk, 'r')
+				
+				for zipfile_entry in zf.namelist():
+					zfilename, zfile_extension = os.path.splitext(zipfile_entry)
+					
+					#print("Zip item:", zipfile_entry)
+					
+					if(zfile_extension == '.adf'):
+						zfile_extensions['adf'] += 1
+					
+					if((zfile_extension == '.slave') or (zfile_extension == '.Slave')):
+						zfile_extensions['slave'] += 1
+						zfile_extensions['slave_dir'] = zipfile_entry
+			
+			#print("zfile_extensions:",zfile_extensions)
+			
+			if(zfile_extensions['adf']):
+				game['Game Type'] = 'ADF'
+			if(zfile_extensions['slave']):
+				game['Game Type'] = 'WHDLoad'
+				game['Slave Dir'] = os.path.dirname(Path(zfile_extensions['slave_dir']))
+		
+		if(game['File Type'] == ".lha"):
+			#print(".lha")
+			
+			lfile_extensions = {
+				'slave': 0
+			}
+			
+			for disk_id, disk in game['Disks'].items():
+			
+				lf = LhaFile(str(Path(game['Dir']) / disk), 'r')
+				
+				for lhafile_entry in lf.namelist():
+					lfilename, lfile_extension = os.path.splitext(lhafile_entry)
+					
+					#print("LHA item:", lhafile_entry)
+					
+					if((lfile_extension == '.slave') or (lfile_extension == '.Slave')):
+						lfile_extensions['slave'] += 1
+						lfile_extensions['slave_dir'] = lhafile_entry
+			
+			if(lfile_extensions['slave']):
+				game['Game Type'] = 'WHDLoad'
+				game['Slave Dir'] = os.path.dirname(Path(lfile_extensions['slave_dir']))
+			
+		
+		#print("Game:",game)
+			
+	print()
+
 def detect_games_chipset():
 
 	for game_name, game in games.items():
@@ -830,6 +992,12 @@ def start():
 	update_progressbar(15)
 	sort_games_disks_order()
 	
+	print()
+	print("Detecting Games Type...")
+	print()
+	
+	update_progressbar(20)
+	detect_games_type()
 	
 	print()
 	print("Detecting Games Chipset...")
@@ -838,7 +1006,7 @@ def start():
 	status_message = "\nDetecting Games Chipset...\n"
 	global_widget_list['text_target_platform'].insert('end', status_message)
 	
-	update_progressbar(20)
+	update_progressbar(25)
 	detect_games_chipset()
 	
 	print()
@@ -848,7 +1016,7 @@ def start():
 	status_message = "\nDetecting Games Issues...\n"
 	global_widget_list['text_target_platform'].insert('end', status_message)
 	
-	update_progressbar(25)
+	update_progressbar(30)
 	detect_games_issues()
 	
 	print()
@@ -858,7 +1026,7 @@ def start():
 	status_message = "\nSorting Games Order...\n"
 	global_widget_list['text_target_platform'].insert('end', status_message)
 	
-	update_progressbar(30)
+	update_progressbar(35)
 	sort_games_dict()
 	
 	print()
@@ -868,7 +1036,7 @@ def start():
 	status_message = "\nCreating Game Files Tab...\n"
 	global_widget_list['text_target_platform'].insert('end', status_message)
 	
-	update_progressbar(35)
+	update_progressbar(40)
 	create_game_files_tab()
 	
 	print()
@@ -878,8 +1046,15 @@ def start():
 	status_message = "\nCreating Game List Tab...\n"
 	global_widget_list['text_target_platform'].insert('end', status_message)
 	
-	update_progressbar(40)
+	update_progressbar(45)
 	create_games_list_tab()
+	
+	print()
+	print("Clearing UAE Configs...")
+	print()
+	
+	update_progressbar(50)
+	clear_uae_configs(ucg_conf['config']['target_uae_path'])
 	
 	print()
 	print("Generating UAE Configs...")
@@ -888,7 +1063,17 @@ def start():
 	status_message = "\nGenerating UAE Configs...\n"
 	global_widget_list['text_target_platform'].insert('end', status_message)
 	
-	update_progressbar(50)
+	update_progressbar(60)
+	generate_uae_configs()
+	
+	print()
+	print("Creating UAE Configs Tab...")
+	print()
+	
+	status_message = "\Creating UAE Configs Tab...\n"
+	global_widget_list['text_target_platform'].insert('end', status_message)
+	
+	update_progressbar(70)
 	create_uae_configs_tab()
 
 	
@@ -900,7 +1085,7 @@ def start():
 		status_message = "\nCreating SNES Classic Tab...\n"
 		global_widget_list['text_target_platform'].insert('end', status_message)
 	
-		update_progressbar(70)
+		update_progressbar(80)
 		create_snesc_tab()
 	
 	#else:
@@ -950,9 +1135,10 @@ def create_game_files_tab():
 	tab_control.add(tab_game_files, text='Game Files', image=images['disk_multiple']['image'], compound='left')
 	
 	## Tree
-	tree_game_files = ttk.Treeview(tab_game_files, columns=("type","size"))
+	tree_game_files = ttk.Treeview(tab_game_files, columns=("file_type","game_type","size"))
 	tree_game_files.heading("#0", text="File")
-	tree_game_files.heading("type", text="Type")
+	tree_game_files.heading("file_type", text="File Type")
+	tree_game_files.heading("game_type", text="Game Type")
 	tree_game_files.heading("size", text="Size") 
 
 	## Scrollbar
@@ -966,16 +1152,15 @@ def create_game_files_tab():
 
 	for dirName, subdirList, fileList in os.walk(ucg_conf['config']['target_games_path']):
 		
-		if(dirName == ucg_conf['config']['target_games_path']):
+		if(dirName == ucg_conf['config']['target_games_path']): # If games path root dir
 			statinfo = os.stat(dirName)
-			tree_game_files.insert('', 'end', dirName, text=dirName, values=('[DIR]',''), tags = ('directory',))
+			tree_game_files.insert('', 'end', dirName, text=dirName, values=('[DIR]','',''), tags = ('directory',))
 		else:
 			statinfo = os.stat(dirName)
 			#tree_game_files.insert(Path(dirName).parent, 'end', dirName, text=dirName, values=('[DIR]',''), tags = ('directory',))
-			
-			tree_game_files.insert(Path(dirName).parent, 'end', dirName, text=os.path.basename(dirName), values=('[DIR]',''), tags = ('directory',))
+			tree_game_files.insert(Path(dirName).parent, 'end', dirName, text=os.path.basename(dirName), values=('[DIR]','',''), tags = ('directory',))
 
-		for fname in fileList:
+		for fname in fileList:	# Parse files
 			
 			# fname_tag
 			fname_tag = ''
@@ -988,21 +1173,57 @@ def create_game_files_tab():
 			filename, file_extension = os.path.splitext(fname)
 			
 			if(file_extension == ".adf"):
-				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.adf',fname_tag,))
+				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.adf',fname_tag,))
+			
+			# .zip
 			if(file_extension == ".zip"):
-				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.zip',fname_tag,))
+				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.zip',fname_tag,))
+				zf = zipfile.ZipFile(Path(dirName) / fname, 'r')
+				for zipfile_entry in zf.namelist():
+					zfilename, zfile_extension = os.path.splitext(zipfile_entry)
+					if(zfile_extension == ".adf"):
+						tree_game_files.insert(Path(dirName) / fname, 'end', Path(dirName) / fname / zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.adf',))
+					if(zfile_extension == ".slave") or (zfile_extension == ".Slave"):
+						tree_game_files.insert(Path(dirName) / fname, 'end', Path(dirName) / fname / zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.slave',))
+			# .lha
+			if(file_extension == ".lha"):
+				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.lha',fname_tag,))
+				lf = LhaFile(str(Path(dirName) / fname), 'r')
+				for lhafile_entry in lf.namelist():
+					lfilename, lfile_extension = os.path.splitext(lhafile_entry)
+					if(lfile_extension == ".slave") or (lfile_extension == ".Slave"):
+						print("lhafile_entry:",lhafile_entry)
+						tree_game_files.insert(Path(dirName) / fname, 'end', Path(dirName) / fname / lhafile_entry, text=lhafile_entry, values=(lfile_extension,'',''),tags = ('.slave',))
+			
+			# .hdf
 			if(file_extension == ".hdf"):
-				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.hdf',fname_tag,))
+				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.hdf',fname_tag,))
+			
 			if(file_extension == ".slave") or (file_extension == ".Slave"):
-				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.slave',fname_tag,))
+				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.slave',fname_tag,))
 			#if(file_extension == ".info") or (file_extension == ".Info"):
-			#	tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,size(statinfo.st_size)),tags = ('.info',fname_tag,))
-
+			#	tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.info',fname_tag,))
+		
+	#
+	# Prune tree
+	#
+	print()
+	print("### Pruning tree_game_files ###")
+	print()
+		
+	prune_treeview(tree_game_files, "")	# start with root
+	
+	#
+	#
+	#
+	
 	tree_game_files.tag_configure('issue', background='#ffdddd')
 	tree_game_files.tag_configure('directory', background='#E8E8E8', image=images['dir']['image'])
 	tree_game_files.tag_configure('.adf', image=images['.adf']['image'])
 	tree_game_files.tag_configure('.zip', image=images['.zip']['image'])
+	tree_game_files.tag_configure('.lha', image=images['.lha']['image'])
 	tree_game_files.tag_configure('.hdf', image=images['.hdf']['image'])
+	tree_game_files.tag_configure('.slave', image=images['.slave']['image'])
 
 	tree_game_files.pack(expand='yes', fill='both')
 
@@ -1020,9 +1241,10 @@ def create_games_list_tab():
 	tab_control.add(tab_games_list, text='Game List', image=images['joystick']['image'], compound='left')
 
 	## Tree
-	tree_game_list = ttk.Treeview(tab_games_list,columns=("type","chipset"))
+	tree_game_list = ttk.Treeview(tab_games_list,columns=("file_type","game_type","chipset"))
 	tree_game_list.heading("#0", text="Game")
-	tree_game_list.heading("type", text="Type")
+	tree_game_list.heading("file_type", text="File Type")
+	tree_game_list.heading("game_type", text="Game Type")
 	tree_game_list.heading("chipset", text="Chipset")
 
 	## Scrollbar
@@ -1051,45 +1273,119 @@ def create_games_list_tab():
 		
 		game_tag = ''
 
-		if((game['Type'] == '.adf')):
+		if((game['File Type'] == '.adf')):
 			if(len(game['Disks']) == 1):
 				game_tag = "disk"
 			if(len(game['Disks']) > 1):
 				game_tag = "disk_multiple"
-		if((game['Type'] == '.zip')):
+		if((game['File Type'] == '.zip')):
 			if(len(game['Disks']) == 1):
 				game_tag = "compress"
 			if(len(game['Disks']) > 1):
 				game_tag = "compress_multiple"
-		if(game['Type'] == '.hdf'):
+		if(game['File Type'] == '.lha'):
+			game_tag = ".lha"
+		if(game['File Type'] == '.hdf'):
 			game_tag = ".hdf"
-		if(game['Type'] == '.slave') or (game['Type'] == '.Slave'):
-			game_tag = "slave"
+		if(game['File Type'] == '.slave') or (game['File Type'] == '.Slave'):
+			game_tag = "dir"
 						
-		#tree_game_list.insert('', 'end', game_name, text=game_name, values=(game['Type'], game['Chipset']), tags = (game_tag,issues_tag,))
-		tree_game_list.insert('', 'end', game_name, text=game_name, values=(game['Type'], game['Chipset']), tags = (game_tag,issues_tag,))
+		# Game node
+		tree_game_list.insert('', 'end', game_name, text=game_name, values=(game['File Type'],game['Game Type'],game['Chipset']), tags = (game_tag,issues_tag,))
 		
-		for disk_id, disk in game['Disks'].items():
 		
-			disk_tag =''
-			
-			#tree_game_list.insert(game_name, 'end', disk, text=disk, tags=(disk_tag,))
-			tree_game_list.insert(game_name, 'end', disk, text=disk, tags=(game['Type'],))
+		# Game type: slave
+		if(game['File Type'] == '.slave') or (game['File Type'] == '.Slave'):
+			# 'Dir' node
+			tree_game_list.insert(game_name, 'end', game_name + "_Dir", text=game['Dir'], values=(game['File Type'],'',''), tags=('dir',))
+			# 'Slave' node
+			for disk_id, disk in game['Disks'].items():
+				disk_tag =''
+				tree_game_list.insert(game_name + "_Dir", 'end', disk, text=disk, values=(game['File Type'],'',''), tags=(game['File Type'],))
+		else:
+			# 'Disk' node(s)
+			for disk_id, disk in game['Disks'].items():
+				disk_tag =''
+				tree_game_list.insert(game_name, 'end', game_name + "_" + disk, text=disk, values=(game['File Type'],'',''), tags=(game['File Type'],))
+				
+				if(game['File Type'] == '.zip'):
+					zf = zipfile.ZipFile(Path(game['Dir']) / disk, 'r')
+					for zipfile_entry in zf.namelist():
+						zfilename, zfile_extension = os.path.splitext(zipfile_entry)
+						if(zfile_extension == ".adf"):
+							tree_game_list.insert(game_name + "_" + disk, 'end', game_name + "_" + disk + "_" + zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.adf',))
+						if(zfile_extension == ".slave") or (zfile_extension == ".Slave"):
+							tree_game_list.insert(game_name + "_" + disk, 'end', game_name + "_" + disk + "_" + zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.slave',))
+				
+				if(game['File Type'] == '.lha'):
+					lf = LhaFile(str(Path(game['Dir']) / disk), 'r')
+					for lhafile_entry in lf.namelist():
+						lfilename, lfile_extension = os.path.splitext(lhafile_entry)
+						if(lfile_extension == ".slave") or (lfile_extension == ".Slave"):
+							tree_game_list.insert(game_name + "_" + disk, 'end', game_name + "_" + disk + "_" + lhafile_entry, text=lhafile_entry, values=(lfile_extension,'',''),tags = ('.slave',))
+				
+					
 		
 	tree_game_list.tag_configure('issue', background='#ffdddd')
 	tree_game_list.tag_configure('.adf', image=images['.adf']['image'])
 	tree_game_list.tag_configure('disk', image=images['disk']['image'])
 	tree_game_list.tag_configure('disk_multiple', image=images['disk_multiple']['image'])
 	tree_game_list.tag_configure('.zip', image=images['.zip']['image'])
+	tree_game_list.tag_configure('.lha', image=images['.lha']['image'])
 	tree_game_list.tag_configure('compress', image=images['compress']['image'])
 	tree_game_list.tag_configure('compress_multiple', image=images['compress_multiple']['image'])
 	tree_game_list.tag_configure('.hdf', image=images['.hdf']['image'])
 	tree_game_list.tag_configure('drive_disk', image=images['drive_disk']['image'])
 	tree_game_list.tag_configure('drive_compress', image=images['drive_compress']['image'])
 	tree_game_list.tag_configure('drive', image=images['drive']['image'])
-	tree_game_list.tag_configure('slave', image=images['dir']['image'])
+	tree_game_list.tag_configure('dir', image=images['dir']['image'])
+	tree_game_list.tag_configure('.slave', image=images['.slave']['image'])
 
 	tree_game_list.pack(expand='yes', fill='both')
+
+def prune_treeview(tree, item=""):
+
+	# Prune tree
+	# Removes 'directory' nodes that does not have any children
+	
+	game_count = 0
+	found_games = 0
+	
+	for child in tree.get_children(item):
+		#print(child)
+		
+		#print(tree.item(child))
+		
+		if((tree.item(child)['values'][0] == '.slave') or (tree.item(child)['values'][0] == '.Slave')):
+			game_count += 1		# increment game_count
+		
+		if((tree.item(child)['values'][0] == '.zip')):
+			game_count += 1		# increment game_count
+		
+		if((tree.item(child)['values'][0] == '.lha')):
+			game_count += 1		# increment game_count
+		
+		if((tree.item(child)['values'][0] == '.adf')):
+			game_count += 1		# increment game_count
+			
+		if((tree.item(child)['values'][0] == '.hdf')):
+			game_count += 1		# increment game_count
+		
+		# If a directory - iterate over that
+		if(tree.item(child)['values'][0] == '[DIR]'):	
+			
+			found_games = prune_treeview(tree,child)
+			
+			# Add found number of games from that directory to the running total
+			game_count += found_games
+			
+			# If no games found in directory (including subdirectories) - prune it
+			if(found_games == 0):
+				print('[DIR]',tree.item(child)['text'],"{",found_games,"} #### PRUNED !!! ###")
+				tree.detach(child)
+	
+	# Return running total of game files found	
+	return game_count		
 
 def on_uae_config_tree_select(event):
 
@@ -1099,10 +1395,55 @@ def on_uae_config_tree_select(event):
 		global_widget_list['text_uae_config'].delete('1.0', 'end')
 		global_widget_list['text_uae_config'].insert('end', games[item_name]['UAE'])
 
-def create_uae_configs_tab():
+def clear_uae_configs(target_uae_path):
+
+	## Clear existing .uae config files
+
+	if(ucg_conf['config']['clear_uae_configs'] == "delete"):
+		
+		print()
+		
+		print("Clearing .uae files from " + target_uae_path + ":\n")
+		
+		for dirName, subdirList, fileList in os.walk(target_uae_path):
+			
+			# Files
+			for fname in fileList:
+				filename, file_extension = os.path.splitext(fname)
+				
+				if(file_extension == ".uae"):
+				
+					os.remove(Path(dirName) / fname)
+					print(Fore.RED + Style.BRIGHT + "Deleted: " + str(Path(dirName) / fname) + Style.RESET_ALL)
+					if(os.path.isfile(str(Path(dirName) / fname) + ".bak")):
+						os.remove(str(Path(dirName) / fname) + ".bak")
+						print(Fore.RED + Style.BRIGHT + "Deleted: " + str(Path(dirName) / fname) + ".bak" + Style.RESET_ALL)
+		print()
+
+	if(ucg_conf['config']['clear_uae_configs'] == "backup"):
+		
+		print()
+		
+		print("Backing up .uae files from " + target_uae_path + ":\n")
+		
+		for dirName, subdirList, fileList in os.walk(target_uae_path):
+			
+			# Files
+			for fname in fileList:
+				filename, file_extension = os.path.splitext(fname)
+				
+				if(file_extension == ".uae"):
+					
+					#copyfile(Path(dirName) / fname, str(Path(dirName) / fname) + ".bak")
+					copy2(Path(dirName) / fname, str(Path(dirName) / fname) + ".bak")
+					print(Fore.RED + Style.BRIGHT + "Copied: " + str(Path(dirName) / fname) + Style.RESET_ALL)
+					print(Fore.RED + Style.BRIGHT + "To: " + str(Path(dirName) / fname) + ".bak" + Style.RESET_ALL)
+					print()
+		print()
+
+def generate_uae_configs():
 	
 	global games
-	global issues_count
 	
 	target_platform_directory_separator = target_platform_config[target_platform]['config']['directory_separator']	## The path separator of the TARGET platform
 	
@@ -1125,25 +1466,27 @@ def create_uae_configs_tab():
 
 		disk_file_count = len(game['Disks'])
 		
+		# Chipset
 		if("AGA" in game['Game']):
 			chipset = 'aga'
 		else:
 			chipset = 'ocs'
 		
-		if((game['Type'] == '.adf') or (game['Type'] == '.zip')):
-			game_type = 'adf'
+		# File Type
+		if((game['File Type'] == '.adf') or (game['File Type'] == '.zip')):
+			file_type = 'adf'
 			
-		if(game['Type'] == '.hdf'):
-			game_type = 'hdf'
+		if(game['File Type'] == '.hdf'):
+			file_type = 'hdf'
 		
-		if(game['Type'] == '.slave'):
-			game_type = 'slave'
+		if(game['File Type'] == '.slave'):
+			file_type = 'slave'
 		
-		##
-		##
-		##
+		#
+		#
+		#
 		
-		print ("[GAME] ",Fore.GREEN, game['Game'], Style.RESET_ALL," (", game_type, ") (", chipset, ")",sep='')
+		print ("[GAME] ",Fore.GREEN, game['Game'], Style.RESET_ALL," (", file_type, ") (", chipset, ")",sep='')
 		
 		'''
 		if(matched_disallowed_characters):
@@ -1170,34 +1513,44 @@ def create_uae_configs_tab():
 				print(Fore.RED + Style.BRIGHT + " ### DISALLOWED CHARACTERS ###" + Style.RESET_ALL)
 			else:
 				print()
-			
+		#
+		#
+		#
+		
+		#	
 		# Build UAE Config
+		#
+		
 		uae_file_contents = ""
 		print()
 		print("[UAE Config]")
 		print()
 		
-		uae_file_contents += "### Generated by UCD (UAE Config Generator) ###\n"
-		uae_file_contents += "#target_platform=" + target_platform + "\n"
+		# Headers
+		uae_file_contents += "### Generated by " + program + " " + version + " ###\n"
+		uae_file_contents += "#Target Platform=" + target_platform + "\n"
 		uae_file_contents += "#Game=" + game['Game'] + "\n"
-		uae_file_contents += "#Type=" + game['Type'] + "\n"
+		uae_file_contents += "#File Type=" + game['File Type'] + "\n"
+		uae_file_contents += "#Game Type=" + game['Game Type'] + "\n"
 		uae_file_contents += "#Chipset=" + chipset + "\n"
 		uae_file_contents += "\n"
 		
-		for uae_config_key, uae_config_value in target_platform_config[target_platform]['uae'][chipset][game_type].items():
+		# Base Template
+		#for uae_config_key, uae_config_value in target_platform_config[target_platform]['uae'][chipset][file_type].items():
+		for uae_config_key, uae_config_value in target_platform_config[target_platform]['uae'][chipset][game['Game Type']].items():
 			uae_file_contents += uae_config_key + "=" + uae_config_value + "\n"
 		
 		## kickstart
 		uae_file_contents += "kickstart_rom_file=" + target_platform_config[target_platform]['config']['amiga_games_kickstart_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_games_kickstart_rom'] + "\n"
 		
-		## rom.key (if set)
+		## rom.key (if set) - OBSOLETE???
 		if ('amiga_games_kickstart_rom_key' in target_platform_config[target_platform]['config']):
 			if (target_platform_config[target_platform]['config']['amiga_games_kickstart_rom_key'] != ""):
-				uae_file_contents += "kickstart_rom_key=" + target_platform_config[target_platform]['config']['amiga_games_kickstart_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_games_kickstart_rom_key'] + "\n"
+				uae_file_contents += "kickstart_key_file=" + target_platform_config[target_platform]['config']['amiga_games_kickstart_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_games_kickstart_rom_key'] + "\n"
 		
 		
-		## floppies
-		if((game['Type'] == '.adf') or (game['Type'] == '.zip')):
+		## ADF
+		if(game['Game Type'] == 'ADF'):
 			floppy_id = 0
 			for disk, disk_file in game['Disks'].items():
 			
@@ -1214,19 +1567,11 @@ def create_uae_configs_tab():
 					uae_file_contents += "floppy" + str(floppy_id) + "=" + final_path + "\n"
 					floppy_id += 1
 		
-		## harddrive
-		if(game['Type'] == '.hdf'):
+		## WHDLoad - HDF
+		if(game['File Type'] == '.hdf'):
 
-			## WHDLoad.hdf
-			#uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
-			
-			## WHDLoad boot dir
-			if(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "dir"):
-				uae_file_contents += "filesystem2=rw,DH0:SYSTEM:"  + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_dir'] + ",0" + "\n"
-			elif(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "hdf"):
-				uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
-			
-			
+			# Game
+			## Note: Moved Game to above WHDLoad to support WinUAE boxart detection for game directory
 			game_dir = game['Dir']
 			game_dir_ralative_path = game_dir.replace(ucg_conf['config']['target_games_path'], '')
 			game_dir_ralative_path = game_dir_ralative_path.replace("\\", target_platform_directory_separator)
@@ -1235,8 +1580,14 @@ def create_uae_configs_tab():
 			final_path = final_path.replace("\\", target_platform_directory_separator)
 			final_path = final_path.replace("/", target_platform_directory_separator)
 			
-			#uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + final_path + "\n"
 			uae_file_contents += "hardfile2=rw,DH1:" + final_path + "," + ucg_conf['config']['base_hardfile2_access'] + "\n"
+			
+			## WHDLoad boot dir
+			## Note: Moved WHDLoad to below game to support WinUAE boxart detection for game directory
+			if(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "dir"):
+				uae_file_contents += "filesystem2=rw,DH0:SYSTEM:"  + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_dir'] + ",0" + "\n"
+			elif(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "hdf"):
+				uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
 			
 			'''
 			print()
@@ -1253,33 +1604,39 @@ def create_uae_configs_tab():
 			print("final_path:",final_path)
 			print()
 		
-		## slave
-		if(game['Type'] == '.slave'):
+		## WHDLoad - DIR, ZIP or LHA
+		if((game['File Type'] == '.slave') or ((game['File Type'] == '.zip') and (game['Game Type'] == 'WHDLoad')) or ((game['File Type'] == '.lha') and (game['Game Type'] == 'WHDLoad'))):
 			
-			
-			
-			## WHDLoad boot dir
-			if(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "dir"):
-				uae_file_contents += "filesystem2=rw,DH0:SYSTEM:"  + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_dir'] + ",0" + "\n"
-			elif(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "hdf"):
-				uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
-				
-			
+			## Game - DH1:
+			## Note: Moved Game to above WHDLoad to support WinUAE boxart detection for game directory
 			game_dir = game['Dir']
 			game_dir_ralative_path = game_dir.replace(ucg_conf['config']['target_games_path'], '')
 			game_dir_ralative_path = game_dir_ralative_path.replace("\\", target_platform_directory_separator)
 			game_dir_ralative_path = game_dir_ralative_path.replace("/", target_platform_directory_separator)
-			#final_path = target_platform_config[target_platform]['config']['parent_path'] + target_platform_directory_separator + str(target_platform_config[target_platform]['config']['amiga_games_relative_path']) + game_dir_ralative_path + target_platform_directory_separator + game['Disks']['1']
-			final_path = target_platform_config[target_platform]['config']['parent_path'] + target_platform_directory_separator + str(target_platform_config[target_platform]['config']['amiga_games_relative_path']) + game_dir_ralative_path
+			
+			if(game['File Type'] == ".zip" or game['File Type'] == ".lha"):
+				final_path = target_platform_config[target_platform]['config']['parent_path'] + target_platform_directory_separator + str(target_platform_config[target_platform]['config']['amiga_games_relative_path']) + game_dir_ralative_path + target_platform_directory_separator + game['Disks']['1']
+			else:
+				final_path = target_platform_config[target_platform]['config']['parent_path'] + target_platform_directory_separator + str(target_platform_config[target_platform]['config']['amiga_games_relative_path']) + game_dir_ralative_path + target_platform_directory_separator
+			
 			final_path = final_path.replace("\\", target_platform_directory_separator)
 			final_path = final_path.replace("/", target_platform_directory_separator)
 			
-			uae_file_contents += "filesystem2=rw,DH1:" + game['Game'] + game['Type'] + ":" + final_path + ",-128" + "\n"
+			if(game['File Type'] == ".zip" or game['File Type'] == ".lha"):
+				uae_file_contents += "filesystem2=ro,DH1:" + game['Slave Dir'] + game['File Type'] + ":" + final_path + ",-128" + "\n"
+			else:
+				uae_file_contents += "filesystem2=rw,DH1:" + game['Game'] + game['File Type'] + ":" + final_path + ",-128" + "\n"
 		
+			## WHDLoad boot dir - DH0:
+			## Note: Moved WHDLoad to below game to support WinUAE boxart detection for game directory
+			if(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "dir"):
+				uae_file_contents += "filesystem2=rw,DH0:SYSTEM:"  + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_dir'] + ",0" + "\n"
+			elif(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "hdf"):
+				uae_file_contents += "hardfile=" + ucg_conf['config']['base_hardfile_access'] + "," + target_platform_config[target_platform]['config']['amiga_whdload_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_whdload_file'] + "\n"
+			
 		print(Fore.YELLOW,end='');
 		print(uae_file_contents)
 		print(Style.RESET_ALL,end='');
-		
 		
 		games[game_name]['UAE'] = uae_file_contents
 		
@@ -1287,17 +1644,25 @@ def create_uae_configs_tab():
 		if(ucg_conf['config']['generate_uae_configs']):
 			print()
 			#print("ucg_target_uae_path: ", ucg_target_uae_path)
-			uae_file_path = Path(ucg_conf['config']['target_uae_path']) / (game['Game'] + ".uae")
+			
+			uae_file_path = Path(ucg_conf['config']['target_uae_path']) / game['Game Type'] / (game['Game'] + ".uae")
+			
+			os.makedirs(os.path.dirname(uae_file_path), exist_ok=True)
+			with open(uae_file_path, "w") as f:
+				f.write(uae_file_contents)
+				f.close()
+			#uae_file = open(uae_file_path, "w+")
+			#uae_file.write(uae_file_contents)
+			#uae_file.close
+			
 			print(Fore.YELLOW + Style.BRIGHT + "Saved: " + str(uae_file_path) + Style.RESET_ALL)
-			uae_file = open(uae_file_path, "w+")
-			uae_file.write(uae_file_contents)
-			uae_file.close
-					
+			
 		print()
 
-		
+def create_uae_configs_tab():
+
 	##
-	## Tab: Game Files - tab_game_files
+	## Tab: UAE Configs - tab_uae_configs
 	##
 	
 	## Tab
@@ -1312,9 +1677,10 @@ def create_uae_configs_tab():
 	frame_treeview_uae_configs.pack(expand='yes', fill='both')
 	
 	## Tree
-	tree_uae_configs = ttk.Treeview(frame_treeview_uae_configs, columns=("type","chipset"))
+	tree_uae_configs = ttk.Treeview(frame_treeview_uae_configs, columns=("file_type","game_type","chipset"))
 	tree_uae_configs.heading("#0", text=ucg_conf['config']['target_uae_path'])
-	tree_uae_configs.heading("type", text="Game Type")
+	tree_uae_configs.heading("file_type", text="File Type")
+	tree_uae_configs.heading("game_type", text="Game Type")
 	tree_uae_configs.heading("chipset", text="Game Chipset")
 	
 	## Scrollbar
@@ -1328,20 +1694,29 @@ def create_uae_configs_tab():
 	
 	for game_name,game in games.items():
 		
-		game_tag = ''
+		file_type_tag = ''
 		
-		if((game['Type'] == '.adf')):
+		# ADF
+		if((game['File Type'] == '.adf')):
 			if(len(game['Disks']) == 1):
-				game_tag = "disk"
+				file_type_tag = "disk"
 			if(len(game['Disks']) > 1):
-				game_tag = "disk_multiple"
-		if((game['Type'] == '.zip')):
+				file_type_tag = "disk_multiple"
+		
+		# ZIP
+		if((game['File Type'] == '.zip')):
 			if(len(game['Disks']) == 1):
-				game_tag = "compress"
+				file_type_tag = "compress"
 			if(len(game['Disks']) > 1):
-				game_tag = "compress_multiple"
-		if(game['Type'] == '.hdf'):
-			game_tag = ".hdf"
+				file_type_tag = "compress_multiple"
+		
+		# LHA
+		if(game['File Type'] == '.lha'):
+			file_type_tag = ".lha"
+		
+		# HDF
+		if(game['File Type'] == '.hdf'):
+			file_type_tag = ".hdf"
 		
 		issues_tag = ''
 		
@@ -1357,30 +1732,58 @@ def create_uae_configs_tab():
 		'''
 		
 		# UAE file
-		tree_uae_configs.insert('', 'end', game_name, text=game_name + ".uae", values=(game['Type'], game['Chipset']), tags = ('uae-' + game['Chipset'],issues_tag,))			
+		tree_uae_configs.insert('', 'end', game_name, text=game_name + ".uae", values=(game['File Type'], game['Game Type'], game['Chipset']), tags = ('uae-' + game['Chipset'],issues_tag,))			
 		
 		# Chipset
 		tree_uae_configs.insert(game_name, 'end', game_name + "_" + "Chipset", text="chipset: " + game['Chipset'], tags=(game['Chipset'],))
-				
-		# WHDLoad.hdf
-		if(game['Type'] == '.hdf'):
-			tree_uae_configs.insert(game_name, 'end', game_name + "_" + "WHDLoad", text="hardfile: " + target_platform_config[target_platform]['config']['amiga_whdload_file'], tags=('drive',))
 		
+		#
+		#
+		#
+		
+		# 'Disks'
 		for disk_id, disk in game['Disks'].items():
 		
 			disk_tag =''
 			
-			if(game['Type'] == '.adf'):
+			# .adf
+			if(game['File Type'] == '.adf'):
 				if(int(disk_id) < ucg_conf['config']['max_nr_floppies']):
 					disk_tag = "drive_disk"
-					tree_uae_configs.insert(game_name, 'end', disk, text="floppy" + str(disk_id) + ": " + disk, tags=(disk_tag,))
-			if(game['Type'] == '.zip'):
+					tree_uae_configs.insert(game_name, 'end', disk, text="[floppy" + str(disk_id) + "]: " + disk, tags=(disk_tag,))
+			
+			# .zip ADF
+			if((game['File Type'] == '.zip') and (game['Game Type'] == 'ADF')):
 				if(int(disk_id) < ucg_conf['config']['max_nr_floppies']):
 					disk_tag = "drive_compress"
-					tree_uae_configs.insert(game_name, 'end', disk, text="floppy" + str(disk_id) + ": " + disk, tags=(disk_tag,))
-			if((game['Type'] == '.hdf')):
+					tree_uae_configs.insert(game_name, 'end', disk, text="[floppy" + str(disk_id) + "]: " + disk, tags=(disk_tag,))
+			
+			# .zip WHDLoad
+			if((game['File Type'] == '.zip') and (game['Game Type'] == 'WHDLoad')):
+					disk_tag = "drive_compress"
+					tree_uae_configs.insert(game_name, 'end', disk, text="[filesystem2] DH1: " + disk, tags=(disk_tag,))
+			
+			# .slave WHDLoad
+			if((game['File Type'] == '.slave')):
 				disk_tag = "drive"
-				tree_uae_configs.insert(game_name, 'end', disk, text="hardfile: " + disk, tags=(disk_tag,))
+				tree_uae_configs.insert(game_name, 'end', disk, text="[filesystem2] DH1: " + disk, tags=(disk_tag,))
+			
+			# .hdf WHDLoad
+			if((game['File Type'] == '.hdf')):
+				disk_tag = "drive"
+				tree_uae_configs.insert(game_name, 'end', disk, text="[hardfile2] DH1: " + disk, tags=(disk_tag,))
+			
+		# WHDLoad 
+		if(game['Game Type'] == 'WHDLoad'):
+		
+			# WHDLoad HDF
+			if(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "hdf"):
+				tree_uae_configs.insert(game_name, 'end', game_name + "_" + "WHDLoad", text="[hardfile2] DH0: " + target_platform_config[target_platform]['config']['amiga_whdload_file'], tags=('drive',))
+			
+			# WHDLoad DIR
+			if(target_platform_config[target_platform]['config']['amiga_whdload_type'] == "dir"):
+				tree_uae_configs.insert(game_name, 'end', game_name + "_" + "WHDLoad", text="[filesystem2] DH0: " + target_platform_config[target_platform]['config']['amiga_whdload_dir'], tags=('drive',))
+			
 
 	tree_uae_configs.bind("<ButtonRelease-1>", on_uae_config_tree_select)
 	
@@ -1390,6 +1793,7 @@ def create_uae_configs_tab():
 	tree_uae_configs.tag_configure('disk', image=images['disk']['image'])
 	tree_uae_configs.tag_configure('disk_multiple', image=images['disk_multiple']['image'])
 	tree_uae_configs.tag_configure('.zip', image=images['.zip']['image'])
+	tree_uae_configs.tag_configure('.lha', image=images['.lha']['image'])
 	tree_uae_configs.tag_configure('compress', image=images['compress']['image'])
 	tree_uae_configs.tag_configure('compress_multiple', image=images['compress_multiple']['image'])
 	tree_uae_configs.tag_configure('.hdf', image=images['.hdf']['image'])
@@ -1433,8 +1837,12 @@ def create_snesc_tab():
 	
 	
 	## Tree
-	tree_snesc = ttk.Treeview(tab_snesc, columns=('src','dst'))
+	tree_snesc = ttk.Treeview(tab_snesc, columns=('file_type','game_type','chipset','copy_status','src','dst'))
 	#tree_snesc.heading("#0", text=ucg_conf['config']['target_uae_path'])
+	tree_snesc.heading("file_type", text="File Type")
+	tree_snesc.heading("game_type", text="Game Type")
+	tree_snesc.heading("chipset", text="Chipset")
+	tree_snesc.heading("copy_status", text="Copy Status")
 	tree_snesc.heading("src", text="Copy Source")
 	tree_snesc.heading("dst", text="Copy Destination")
 	
@@ -1446,7 +1854,6 @@ def create_snesc_tab():
 	#
 	# SNES Classic/Mini - Linked Export
 	#
-
 
 	if(ucg_conf['config']['snesc_linked_export_show_uae_games']):
 		print()
@@ -1466,12 +1873,16 @@ def create_snesc_tab():
 			
 				if(file_extension == ".uae"):
 				
-					#tree_snesc.insert(dirName, 'end', fname, text=fname, tags=('uae',))
+					# UAE file node
 					tree_snesc.insert('', 'end', fname, text=fname, tags=('issue',))
 					
 					print("  +---[FILE] " + fname)
 					
-					if(ucg_conf['config']['snesc_linked_export_match_by'] == "filename"):		## Match by filename
+					##
+					## Match by filename
+					##
+					
+					if(ucg_conf['config']['snesc_linked_export_match_by'] == "filename"):		
 					
 						if filename in games.keys():		## If game exists in games dict
 							
@@ -1481,18 +1892,32 @@ def create_snesc_tab():
 							
 							game_tag = ''
 		
-							if((game['Type'] == '.adf')):
+							## ADF
+							if((game['File Type'] == '.adf')):
 								if(len(game['Disks']) == 1):
 									game_tag = "disk"
 								if(len(game['Disks']) > 1):
 									game_tag = "disk_multiple"
-							if((game['Type'] == '.zip')):
+							
+							## ZIP
+							if((game['File Type'] == '.zip')):
 								if(len(game['Disks']) == 1):
 									game_tag = "compress"
 								if(len(game['Disks']) > 1):
 									game_tag = "compress_multiple"
-							if(game['Type'] == '.hdf'):
+							
+							## HFD
+							if(game['File Type'] == '.hdf'):
 								game_tag = ".hdf"
+							
+							## SLAVE
+							if(game['File Type'] == '.slave'):
+								game_tag = ".slave"
+							
+							## LHA
+							if(game['File Type'] == '.lha'):
+								game_tag = ".lha"
+								
 							
 							'''
 							print()
@@ -1500,11 +1925,10 @@ def create_snesc_tab():
 							print()
 							'''
 							
-							tree_snesc.insert(fname, 'end', game['Game'], text=game['Game'], tag=(game_tag,))
+							# Game node
+							tree_snesc.insert(fname, 'end', game['Game'], text=game['Game'], values=(game['File Type'],game['Game Type'],game['Chipset'],'','',''),tag=(game_tag,))
 							
-							tree_snesc.item(fname, tag=('uae-' + game['Chipset'],)) ## Update parent UAE file tags
-							
-							uae_file_path = str(Path(ucg_conf['config']['target_uae_path']) / (filename + ".uae"))
+							uae_file_path = str(Path(ucg_conf['config']['target_uae_path']) / game['Game Type'] / (filename + ".uae"))
 							
 							if(ucg_conf['config']['snesc_linked_export_copy_uae_config']):
 							
@@ -1523,15 +1947,23 @@ def create_snesc_tab():
 								try:
 									#copyfile(uae_file_path, Path(dirName) / fname)
 									copy2(uae_file_path, Path(dirName) / fname)		## copy2() copies with with timestamp
+									print("\tCopied OK")
+									copy_status = 'OK'
 								except IOError as exception:
 									print("\tCopy error:",exception)
-								finally:
-									print("\tCopied OK")
+									copy_status = 'ERROR'
 								
-								tree_snesc.item(fname, values=(uae_file_path,Path(dirName) / fname))
-						
+								# Update UAE file node
+								tree_snesc.item(fname, values=(game['File Type'],game['Game Type'], game['Chipset'],copy_status,uae_file_path,Path(dirName) / fname), tag=('uae-' + game['Chipset'],))
+							#
+						#
+					#
 					
-					if(ucg_conf['config']['snesc_linked_export_match_by'] == "contents"):		## Match by contents
+					##
+					## Match by contents
+					##
+					
+					if(ucg_conf['config']['snesc_linked_export_match_by'] == "contents"):		
 					
 						## Get file contents
 						with open(Path(dirName) / fname) as snesc_uae_file:
@@ -1541,21 +1973,56 @@ def create_snesc_tab():
 						print(Fore.YELLOW,end='');
 						print(snesc_uae_file_lines[0])	## Header
 						print(snesc_uae_file_lines[1])	## Platform
-						print(snesc_uae_file_lines[2])	## Game
-						print(snesc_uae_file_lines[3])	## Type
-						print(snesc_uae_file_lines[4])	## Chipset
+						print(snesc_uae_file_lines[2])	## Game Name
+						print(snesc_uae_file_lines[3])	## File Type
+						print(snesc_uae_file_lines[4])	## Game Type
+						print(snesc_uae_file_lines[5])	## Chipset
 						print(Style.RESET_ALL,end='');
 						
 						contents_game_name = snesc_uae_file_lines[2].split('#Game=')
+						contents_game_type = snesc_uae_file_lines[4].split('#Game Type=')
 	
 						if(len(contents_game_name) > 1):
 							if contents_game_name[1] in games.keys():
 								
-								print("  +---[GAME] " + Fore.GREEN + contents_game_name[1] + Style.RESET_ALL)
+								game = games[contents_game_name[1]]
 								
+								print("  +---[GAME] " + Fore.GREEN + game['Game'] + Style.RESET_ALL)
+								
+								game_tag = ''
+		
+								## ADF
+								if((game['File Type'] == '.adf')):
+									if(len(game['Disks']) == 1):
+										game_tag = "disk"
+									if(len(game['Disks']) > 1):
+										game_tag = "disk_multiple"
+								
+								## ZIP
+								if((game['File Type'] == '.zip')):
+									if(len(game['Disks']) == 1):
+										game_tag = "compress"
+									if(len(game['Disks']) > 1):
+										game_tag = "compress_multiple"
+								
+								## HFD
+								if(game['File Type'] == '.hdf'):
+									game_tag = ".hdf"
+								
+								## SLAVE
+								if(game['File Type'] == '.slave'):
+									game_tag = ".slave"
+								
+								## LHA
+								if(game['File Type'] == '.lha'):
+									game_tag = ".lha"
+									
+								## Game node
+								tree_snesc.insert(fname, 'end', game['Game'], text=game['Game'], values=(game['File Type'],game['Game Type'],game['Chipset'],'','',''),tag=(game_tag,))
+							
 								if(ucg_conf['config']['snesc_linked_export_copy_uae_config']):
 								
-									uae_file_path = str(Path(ucg_conf['config']['target_uae_path']) / (contents_game_name[1] + ".uae"))
+									uae_file_path = str(Path(ucg_conf['config']['target_uae_path']) / game['Game Type'] / (game['Game'] + ".uae"))
 								
 									print()
 									print(Fore.RED,end='');
@@ -1572,12 +2039,19 @@ def create_snesc_tab():
 									try:
 										#copyfile(uae_file_path, Path(dirName) / fname)
 										copy2(uae_file_path, Path(dirName) / fname)		## copy2() copies with with timestamp
+										print("\tCopied OK")
+										copy_status = 'OK'
 									except IOError as exception:
 										print("\tCopy error:",exception)
-									finally:
-										print("\tCopied OK")
-						
-					
+										copy_status = 'ERROR'
+
+									# Update UAE file node
+									tree_snesc.item(fname, values=(game['File Type'],game['Game Type'], game['Chipset'],copy_status,uae_file_path,Path(dirName) / fname), tag=('uae-' + game['Chipset'],))
+								#
+							#
+						#
+					#
+				#
 			print()
 			
 			tree_snesc.tag_configure('issue', background='#ffdddd')
@@ -1587,6 +2061,8 @@ def create_snesc_tab():
 			tree_snesc.tag_configure('compress', image=images['compress']['image'])
 			tree_snesc.tag_configure('compress_multiple', image=images['compress_multiple']['image'])
 			tree_snesc.tag_configure('.hdf', image=images['.hdf']['image'])
+			tree_snesc.tag_configure('.slave', image=images['.slave']['image'])
+			tree_snesc.tag_configure('.lha', image=images['.lha']['image'])
 			#tree_snesc.tag_configure('uae', image=images['uae']['image'])
 			#tree_snesc.tag_configure('uae-grey', background='#FFDDDD', image=images['uae-grey']['image'])
 			tree_snesc.tag_configure('uae-aga', image=images['uae-aga']['image'])
@@ -1743,6 +2219,18 @@ images = {
 	},
 	'compress': {
 		'path': Path(cwd) / "img/silk/compress.png"
+	},
+	'.lha': {
+		'path': Path(cwd) / "img/lha-16x16.png"
+	},
+	'WHDLoad': {
+		'path': Path(cwd) / "img/w-16x16.png"
+	},
+	'.slave': {
+		'path': Path(cwd) / "img/silk/link.png"
+	},
+	'.Slave': {
+		'path': Path(cwd) / "img/silk/link.png"
 	},
 	'.hdf': {
 		'path': Path(cwd) / "img/silk/database.png"
@@ -1909,11 +2397,16 @@ for platform_index, platform_value in target_platform_config.items():
 	## Add uae - ocs - adf node
 	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_adf" , text='adf', tag=('.adf',))
 	
+	## Add uae - ocs - WHDLoad node
+	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_whdload" , text='WHDLoad', tag=('WHDLoad',))
+	
+	'''
 	## Add uae - ocs - hdf node
 	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_hdf" , text='hdf', tag=('.hdf',))
 	
 	## Add uae - ocs - slave node
 	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_slave" , text='slave', tag=('.slave',))
+	'''
 	
 	## Add uae - aga node
 	tree_target_platform.insert(platform_index + "_uae", 'end', platform_index + "_uae_aga" , text='aga', tag=('aga',))
@@ -1921,12 +2414,17 @@ for platform_index, platform_value in target_platform_config.items():
 	## Add uae - aga - adf node
 	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_adf" , text='adf', tag=('.adf',))
 	
+	## Add uae - aga - WHDLoad node
+	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_whdload" , text='WHDLoad', tag=('WHDLoad',))
+	
+	'''
 	## Add uae - aga - hdf node
 	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_hdf" , text='hdf', tag=('.hdf',))
 	
 	## Add uae - aga - slave node
 	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_slave" , text='slave', tag=('.slave',))
-
+	'''
+	
 ## Select first in target platform list
 tree_target_platform.selection_set(list(target_platform_config.keys())[0])
 	
@@ -2037,6 +2535,7 @@ tree_target_platform.tag_configure('uae-ocs', image=images['uae-ocs']['image'])
 tree_target_platform.tag_configure('.adf', image=images['.adf']['image'])
 tree_target_platform.tag_configure('.hdf', image=images['.hdf']['image'])
 tree_target_platform.tag_configure('.slave', image=images['dir']['image'])
+tree_target_platform.tag_configure('WHDLoad', image=images['WHDLoad']['image'])
 
 tab_control.pack(expand=1, fill='both')
 

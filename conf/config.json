@@ -8,7 +8,7 @@
 		"base_hardfile2_access": "32,1,2,512,0,,uae1",
 		"snesc_linked_export_show_uae_games": 1,
 		"snesc_linked_export_copy_uae_config": 1,
-		"snesc_linked_export_match_by": "filename"
+		"snesc_linked_export_match_by": "contents"
 	},
 	"debug": {
 		"print_dir_scan": 1,
