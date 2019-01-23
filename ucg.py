@@ -30,7 +30,7 @@ colorama.init()
 ##
 
 program = "UCG (UAE Configuration Generator)"
-version = "v0.4-beta"
+version = "v0.5-beta"
 
 print(Style.BRIGHT)
 print("=======================================================================")
@@ -39,11 +39,20 @@ print(version)
 print("=======================================================================")
 print(Style.RESET_ALL)
 
+def is_32_or_64bit():
+	if platform.machine().endswith('64'):
+		return "64bit"
+	else:
+		return "32bit"
+	
 print()
 #print("os.name:",os.name)							# nt | linux | posix
 print("platform.system():",platform.system())		# Windows | Linux | Darwin
 print("platform.release():",platform.release())
-
+print("platform.machine():",platform.machine())
+print("is_32_or_64bit():",is_32_or_64bit())
+print()
+print("platform.architecture():",platform.architecture())
 print()
 print("platform.python_version():",platform.python_version())
 #print("platform.python_revision():",platform.python_revision())
@@ -62,6 +71,10 @@ if platform.system() == 'Windows':
 ##
 ##
 ##
+	
+#
+#
+#
 
 print()
 
@@ -2187,6 +2200,9 @@ images = {
 	'python': {
 		'path': Path(cwd) / "img/python-16x16.png"
 	},
+	'pyinstaller': {
+		'path': Path(cwd) / "img/pyinstaller-16x16.png"
+	},
 	'aga': {
 		'path': Path(cwd) / "img/aga-16x16.png"
 	},
@@ -2305,7 +2321,7 @@ label_about_system = ttk.Label(tab_about, text= 'System:')
 label_about_system.grid(row=0, column=0, sticky='E')
 
 if(platform.system() == 'Windows'):
-	label_about_system_image = ttk.Label(tab_about, image=images['windows']['image'], text='Windows', compound='left')
+	label_about_system_image = ttk.Label(tab_about, image=images['windows']['image'], text=platform.system() + " " + platform.release() + " (" + is_32_or_64bit() + ")", compound='left')
 	label_about_system_image.grid(row=0, column=1, columnspan=2, sticky='w')
 
 if(platform.system() == 'Linux'):
@@ -2316,15 +2332,34 @@ if(platform.system() == 'Linux'):
 ## Python
 ##
 
+python_architecture = platform.architecture()
+
 label_about_python_version = ttk.Label(tab_about, text= 'Python:')
 label_about_python_version.grid(row=1, column=0, sticky='e')
 
-label_about_python_version_image = ttk.Label(tab_about, justify='left', image=images['python']['image'], text=platform.python_version(), compound='left')
+label_about_python_version_image = ttk.Label(tab_about, justify='left', image=images['python']['image'], text=platform.python_version() + " (" + python_architecture[0] + ")", compound='left')
 label_about_python_version_image.grid(row=1, column=1, sticky='w')
 
 ##
+## Running As
 ##
-##
+
+label_running_as = ttk.Label(tab_about, text='Running As:')
+label_running_as.grid(row=2, column=0, sticky='e')
+
+if getattr( sys, 'frozen', False ):
+	running_as = "Executable"
+	label_running_as_image = ttk.Label(tab_about, justify='left', image=images['pyinstaller']['image'], text=running_as, compound='left')
+	
+else:
+	running_as = "Python Script"
+	label_running_as_image = ttk.Label(tab_about, justify='left', image=images['python']['image'], text=running_as, compound='left')
+
+label_running_as_image.grid(row=2, column=1, sticky='w')
+
+
+
+
 
 ##
 ## Tab: Target Platform
