@@ -1,14 +1,8 @@
 # UCG (UAE Configuration Generator)
 
-## Latest release
+## Latest Release
 
 [v0.5-beta](https://github.com/solarmon/UCG/releases/tag/v0.5-beta)
-
-32bit and 64bit executables are now available.
-
-Currently only tested on **Windows 10 64-bit**
-
-Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
 
 ## Summary
 
@@ -20,6 +14,37 @@ https://www.reddit.com/r/miniSNESmods/comments/8dbqv7/guide_playing_amiga_games_
 http://lindqvist.synology.me/wordpress/?page_id=182
 
 and is to help automate the UAE configuration file creation process, providing a templated method for differrent target platforms.
+
+## System Requirements ##
+
+### Run As: Executable ###
+
+* Windows:
+
+  - 32-bit
+  - 64-bit
+
+  Confirmed to be working on:
+
+  - Windows 10 Pro 64-bit
+  - Windows 7 Pro 32-bit SP1
+
+* Microsoft Visual C++ 2015 Redistributable
+  - For Windows 7, **Service Pack 1** is required to be installed first.
+
+### Run As: Python Script ###
+
+* Python 3.7.2
+
+  The following additional modules are required to be installed:
+  
+  - colorama
+  - hurry.filesize
+  - pillow
+  - lhafile
+    - requires Microsoft Visual C++ 2015 Redistributable
+
+Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
 
 ## Supported Amiga Game File formats
 
