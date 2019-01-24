@@ -23,9 +23,6 @@ and is to help automate the UAE configuration file creation process, providing a
 
 * Windows:
 
-  - 32-bit
-  - 64-bit
-
   Confirmed to be working on:
 
   - Windows 10 Pro 64-bit
