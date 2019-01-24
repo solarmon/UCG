@@ -4,6 +4,8 @@
 
 [v0.5-beta](https://github.com/solarmon/UCG/releases/tag/v0.5-beta)
 
+Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
+
 ## Summary
 
 UCG is a GUI tool developed using **Python 3** that generates UAE configuration files that are used by various UAE based Amiga emulators and game launchers.
@@ -43,8 +45,6 @@ and is to help automate the UAE configuration file creation process, providing a
   - pillow
   - lhafile
     - requires Microsoft Visual C++ 2015 Redistributable
-
-Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
 
 ## Supported Amiga Game File formats
 
