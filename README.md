@@ -31,7 +31,7 @@ and is to help automate the UAE configuration file creation process, providing a
   - Windows 10 Pro 64-bit
   - Windows 7 Pro 32-bit SP1
 
-* Microsoft Visual C++ 2015 Redistributable
+* Microsoft Visual C++ 14.0 (2015) Redistributable
   - For Windows 7, **Service Pack 1** is required to be installed first.
 
 ### Run As: Python Script ###
@@ -44,7 +44,7 @@ and is to help automate the UAE configuration file creation process, providing a
   - hurry.filesize
   - pillow
   - lhafile
-    - requires Microsoft Visual C++ 2015 Redistributable
+    - requires Microsoft Visual C++ 14.0 (2015) Redistributable
 
 ## Supported Amiga Game File formats
 
