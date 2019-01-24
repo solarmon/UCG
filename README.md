@@ -45,7 +45,7 @@ and is to help automate the UAE configuration file creation process, providing a
   - pillow
   - lhafile
     - requires Microsoft Visual C++ 14.0 (2015)
-    - requires .NET Framework 4.6
+      - requires .NET Framework 4.6
 
 ## Supported Amiga Game File formats
 
