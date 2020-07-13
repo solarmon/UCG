@@ -30,7 +30,7 @@ colorama.init()
 ##
 
 program = "UCG (UAE Configuration Generator)"
-version = "v0.5-beta"
+version = "v0.6-beta"
 
 print(Style.BRIGHT)
 print("=======================================================================")
@@ -323,11 +323,11 @@ def generate_games_dictionary():
 			##
 			
 			#
-			# .zip or .adf
+			# .zip or .adf or .ipf
 			#
-			# Note: .zip could either be for ADF or WHDLoad games
+			# Note: .zip could either be for ADF, IPF or WHDLoad games
 			
-			if (file_extension == '.zip') or (file_extension == '.adf'):
+			if (file_extension == '.zip') or (file_extension == '.adf') or (file_extension == '.ipf'):
 			
 				game_disk = filename.split('__')
 				
@@ -450,12 +450,13 @@ def generate_games_dictionary():
 					
 					for zipfile_entry in zf.namelist():
 						zfilename, zfile_extension = os.path.splitext(zipfile_entry)
-						
-						
+
 						if(zfile_extension == '.adf'):
 							print("              +---" + zipfile_entry + " (" + zfile_extension +  ")")
-							
-						
+
+						if(zfile_extension == '.ipf'):
+							print("              +---" + zipfile_entry + " (" + zfile_extension +  ")")
+
 						if((zfile_extension == '.slave') or (zfile_extension == '.Slave')):
 							print("              +---" + zipfile_entry + " (" + zfile_extension +  ")")
 							
@@ -618,7 +619,7 @@ def sort_games_disks_order():
 	for game_name,game in games.items():
 	
 		# Only for .adf or .zip games
-		if((game['File Type'] == '.zip') or (game['File Type'] == '.adf')):
+		if((game['File Type'] == '.zip') or (game['File Type'] == '.adf') or (game['File Type'] == '.ipf')):
 		
 			# Only if more than one disk
 			if(len(game['Disks'].items()) > 1):
@@ -686,6 +687,10 @@ def detect_games_type():
 		if(game['File Type'] == ".adf"):
 			#print(".adf")
 			game['Game Type'] = "ADF"
+
+		if(game['File Type'] == ".ipf"):
+			#print(".adf")
+			game['Game Type'] = "IPF"
 			
 		if(game['File Type'] == ".hdf"):
 			#print(".hdf")
@@ -702,6 +707,7 @@ def detect_games_type():
 			
 			zfile_extensions = {
 				'adf': 0,
+				'ipf': 0,
 				'slave': 0
 			}
 					
@@ -714,19 +720,28 @@ def detect_games_type():
 				for zipfile_entry in zf.namelist():
 					zfilename, zfile_extension = os.path.splitext(zipfile_entry)
 					
-					#print("Zip item:", zipfile_entry)
+					print("Zip item:", zipfile_entry)
 					
 					if(zfile_extension == '.adf'):
 						zfile_extensions['adf'] += 1
-					
+
+					if(zfile_extension == '.ipf'):
+						zfile_extensions['ipf'] += 1
+
 					if((zfile_extension == '.slave') or (zfile_extension == '.Slave')):
 						zfile_extensions['slave'] += 1
 						zfile_extensions['slave_dir'] = zipfile_entry
 			
-			#print("zfile_extensions:",zfile_extensions)
+			print("zfile_extensions:",zfile_extensions)
 			
 			if(zfile_extensions['adf']):
+				print("Game Type: ADF")
 				game['Game Type'] = 'ADF'
+
+			if(zfile_extensions['ipf']):
+				print("Game Type: IPF")
+				game['Game Type'] = 'IPF'
+
 			if(zfile_extensions['slave']):
 				game['Game Type'] = 'WHDLoad'
 				game['Slave Dir'] = os.path.dirname(Path(zfile_extensions['slave_dir']))
@@ -1185,9 +1200,14 @@ def create_game_files_tab():
 			
 			filename, file_extension = os.path.splitext(fname)
 			
+            # .adf
 			if(file_extension == ".adf"):
 				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.adf',fname_tag,))
 			
+            # .ipf
+			if(file_extension == ".ipf"):
+				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.ipf',fname_tag,))
+                
 			# .zip
 			if(file_extension == ".zip"):
 				tree_game_files.insert(dirName, 'end', Path(dirName) / fname, text= fname, values=(file_extension,'',size(statinfo.st_size)),tags = ('.zip',fname_tag,))
@@ -1196,6 +1216,8 @@ def create_game_files_tab():
 					zfilename, zfile_extension = os.path.splitext(zipfile_entry)
 					if(zfile_extension == ".adf"):
 						tree_game_files.insert(Path(dirName) / fname, 'end', Path(dirName) / fname / zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.adf',))
+					if(zfile_extension == ".ipf"):
+						tree_game_files.insert(Path(dirName) / fname, 'end', Path(dirName) / fname / zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.ipf',))
 					if(zfile_extension == ".slave") or (zfile_extension == ".Slave"):
 						tree_game_files.insert(Path(dirName) / fname, 'end', Path(dirName) / fname / zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.slave',))
 			# .lha
@@ -1233,6 +1255,7 @@ def create_game_files_tab():
 	tree_game_files.tag_configure('issue', background='#ffdddd')
 	tree_game_files.tag_configure('directory', background='#E8E8E8', image=images['dir']['image'])
 	tree_game_files.tag_configure('.adf', image=images['.adf']['image'])
+	tree_game_files.tag_configure('.ipf', image=images['.ipf']['image'])
 	tree_game_files.tag_configure('.zip', image=images['.zip']['image'])
 	tree_game_files.tag_configure('.lha', image=images['.lha']['image'])
 	tree_game_files.tag_configure('.hdf', image=images['.hdf']['image'])
@@ -1291,6 +1314,11 @@ def create_games_list_tab():
 				game_tag = "disk"
 			if(len(game['Disks']) > 1):
 				game_tag = "disk_multiple"
+		if((game['File Type'] == '.ipf')):
+			if(len(game['Disks']) == 1):
+				game_tag = "disk"
+			if(len(game['Disks']) > 1):
+				game_tag = "disk_multiple"
 		if((game['File Type'] == '.zip')):
 			if(len(game['Disks']) == 1):
 				game_tag = "compress"
@@ -1327,6 +1355,8 @@ def create_games_list_tab():
 						zfilename, zfile_extension = os.path.splitext(zipfile_entry)
 						if(zfile_extension == ".adf"):
 							tree_game_list.insert(game_name + "_" + disk, 'end', game_name + "_" + disk + "_" + zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.adf',))
+						if(zfile_extension == ".ipf"):
+							tree_game_list.insert(game_name + "_" + disk, 'end', game_name + "_" + disk + "_" + zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.ipf',))
 						if(zfile_extension == ".slave") or (zfile_extension == ".Slave"):
 							tree_game_list.insert(game_name + "_" + disk, 'end', game_name + "_" + disk + "_" + zipfile_entry, text=zipfile_entry, values=(zfile_extension,'',''),tags = ('.slave',))
 				
@@ -1341,6 +1371,7 @@ def create_games_list_tab():
 		
 	tree_game_list.tag_configure('issue', background='#ffdddd')
 	tree_game_list.tag_configure('.adf', image=images['.adf']['image'])
+	tree_game_list.tag_configure('.ipf', image=images['.ipf']['image'])
 	tree_game_list.tag_configure('disk', image=images['disk']['image'])
 	tree_game_list.tag_configure('disk_multiple', image=images['disk_multiple']['image'])
 	tree_game_list.tag_configure('.zip', image=images['.zip']['image'])
@@ -1381,6 +1412,9 @@ def prune_treeview(tree, item=""):
 		if((tree.item(child)['values'][0] == '.adf')):
 			game_count += 1		# increment game_count
 			
+		if((tree.item(child)['values'][0] == '.ipf')):
+			game_count += 1		# increment game_count
+
 		if((tree.item(child)['values'][0] == '.hdf')):
 			game_count += 1		# increment game_count
 		
@@ -1489,6 +1523,12 @@ def generate_uae_configs():
 		if((game['File Type'] == '.adf') or (game['File Type'] == '.zip')):
 			file_type = 'adf'
 			
+		if(game['File Type'] == '.lha'):
+			file_type = 'lha'
+
+		if(game['File Type'] == '.ipf'):
+			file_type = 'ipf'
+
 		if(game['File Type'] == '.hdf'):
 			file_type = 'hdf'
 		
@@ -1562,8 +1602,8 @@ def generate_uae_configs():
 				uae_file_contents += "kickstart_key_file=" + target_platform_config[target_platform]['config']['amiga_games_kickstart_path'] + target_platform_directory_separator + target_platform_config[target_platform]['config']['amiga_games_kickstart_rom_key'] + "\n"
 		
 		
-		## ADF
-		if(game['Game Type'] == 'ADF'):
+		## ADF or IPF
+		if((game['Game Type'] == 'ADF') or (game['Game Type'] == 'IPF')):
 			floppy_id = 0
 			for disk, disk_file in game['Disks'].items():
 			
@@ -1716,7 +1756,14 @@ def create_uae_configs_tab():
 			if(len(game['Disks']) > 1):
 				file_type_tag = "disk_multiple"
 		
-		# ZIP
+		# IPF
+		if((game['File Type'] == '.ipf')):
+			if(len(game['Disks']) == 1):
+				file_type_tag = "disk"
+			if(len(game['Disks']) > 1):
+				file_type_tag = "disk_multiple"
+                
+        # ZIP
 		if((game['File Type'] == '.zip')):
 			if(len(game['Disks']) == 1):
 				file_type_tag = "compress"
@@ -1765,13 +1812,25 @@ def create_uae_configs_tab():
 					disk_tag = "drive_disk"
 					tree_uae_configs.insert(game_name, 'end', disk, text="[floppy" + str(disk_id) + "]: " + disk, tags=(disk_tag,))
 			
+            # .adf
+			if(game['File Type'] == '.ipf'):
+				if(int(disk_id) < ucg_conf['config']['max_nr_floppies']):
+					disk_tag = "drive_disk"
+					tree_uae_configs.insert(game_name, 'end', disk, text="[floppy" + str(disk_id) + "]: " + disk, tags=(disk_tag,))
+                    
 			# .zip ADF
 			if((game['File Type'] == '.zip') and (game['Game Type'] == 'ADF')):
 				if(int(disk_id) < ucg_conf['config']['max_nr_floppies']):
 					disk_tag = "drive_compress"
 					tree_uae_configs.insert(game_name, 'end', disk, text="[floppy" + str(disk_id) + "]: " + disk, tags=(disk_tag,))
 			
-			# .zip WHDLoad
+			# .zip IPF
+			if((game['File Type'] == '.zip') and (game['Game Type'] == 'IPF')):
+				if(int(disk_id) < ucg_conf['config']['max_nr_floppies']):
+					disk_tag = "drive_compress"
+					tree_uae_configs.insert(game_name, 'end', disk, text="[floppy" + str(disk_id) + "]: " + disk, tags=(disk_tag,))
+                    
+            # .zip WHDLoad
 			if((game['File Type'] == '.zip') and (game['Game Type'] == 'WHDLoad')):
 					disk_tag = "drive_compress"
 					tree_uae_configs.insert(game_name, 'end', disk, text="[filesystem2] DH1: " + disk, tags=(disk_tag,))
@@ -1803,6 +1862,7 @@ def create_uae_configs_tab():
 	tree_uae_configs.tag_configure('issue', background='#ffdddd')
 	
 	tree_uae_configs.tag_configure('.adf', image=images['.adf']['image'])
+	tree_uae_configs.tag_configure('.ipf', image=images['.ipf']['image'])
 	tree_uae_configs.tag_configure('disk', image=images['disk']['image'])
 	tree_uae_configs.tag_configure('disk_multiple', image=images['disk_multiple']['image'])
 	tree_uae_configs.tag_configure('.zip', image=images['.zip']['image'])
@@ -1912,7 +1972,14 @@ def create_snesc_tab():
 								if(len(game['Disks']) > 1):
 									game_tag = "disk_multiple"
 							
-							## ZIP
+							## IPF
+							if((game['File Type'] == '.ipf')):
+								if(len(game['Disks']) == 1):
+									game_tag = "disk"
+								if(len(game['Disks']) > 1):
+									game_tag = "disk_multiple"
+                                    
+                            ## ZIP
 							if((game['File Type'] == '.zip')):
 								if(len(game['Disks']) == 1):
 									game_tag = "compress"
@@ -2011,7 +2078,14 @@ def create_snesc_tab():
 									if(len(game['Disks']) > 1):
 										game_tag = "disk_multiple"
 								
-								## ZIP
+								## IPF
+								if((game['File Type'] == '.ipf')):
+									if(len(game['Disks']) == 1):
+										game_tag = "disk"
+									if(len(game['Disks']) > 1):
+										game_tag = "disk_multiple"
+                                        
+                                ## ZIP
 								if((game['File Type'] == '.zip')):
 									if(len(game['Disks']) == 1):
 										game_tag = "compress"
@@ -2224,7 +2298,10 @@ images = {
 	'.adf': {
 		'path': Path(cwd) / "img/silk/disk.png"
 	},
-	'disk': {
+	'.ipf': {
+		'path': Path(cwd) / "img/silk/disk.png"
+	},
+    'disk': {
 		'path': Path(cwd) / "img/silk/disk.png"
 	},
 	'disk_multiple': {
@@ -2432,6 +2509,9 @@ for platform_index, platform_value in target_platform_config.items():
 	## Add uae - ocs - adf node
 	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_adf" , text='adf', tag=('.adf',))
 	
+    ## Add uae - ocs - ipf node
+	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_ipf" , text='ipf', tag=('.ipf',))
+    
 	## Add uae - ocs - WHDLoad node
 	tree_target_platform.insert(platform_index + "_uae_ocs", 'end', platform_index + "_uae_ocs_whdload" , text='WHDLoad', tag=('WHDLoad',))
 	
@@ -2449,7 +2529,10 @@ for platform_index, platform_value in target_platform_config.items():
 	## Add uae - aga - adf node
 	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_adf" , text='adf', tag=('.adf',))
 	
-	## Add uae - aga - WHDLoad node
+	## Add uae - aga - ipf node
+	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_ipf" , text='ipf', tag=('.ipf',))
+    
+    ## Add uae - aga - WHDLoad node
 	tree_target_platform.insert(platform_index + "_uae_aga", 'end', platform_index + "_uae_aga_whdload" , text='WHDLoad', tag=('WHDLoad',))
 	
 	'''
@@ -2568,6 +2651,7 @@ tree_target_platform.tag_configure('ocs', image=images['ocs']['image'])
 tree_target_platform.tag_configure('uae-aga', image=images['uae-aga']['image'])
 tree_target_platform.tag_configure('uae-ocs', image=images['uae-ocs']['image'])
 tree_target_platform.tag_configure('.adf', image=images['.adf']['image'])
+tree_target_platform.tag_configure('.ipf', image=images['.ipf']['image'])
 tree_target_platform.tag_configure('.hdf', image=images['.hdf']['image'])
 tree_target_platform.tag_configure('.slave', image=images['dir']['image'])
 tree_target_platform.tag_configure('WHDLoad', image=images['WHDLoad']['image'])
