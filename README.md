@@ -2,7 +2,7 @@
 
 ## Latest Release
 
-[v0.5-beta](https://github.com/solarmon/UCG/releases/tag/v0.5-beta)
+[v0.6-beta](https://github.com/solarmon/UCG/releases/tag/v0.6-beta)
 
 Older versions can be found in [Releases](https://github.com/solarmon/UCG/releases)
 
@@ -33,7 +33,7 @@ and is to help automate the UAE configuration file creation process, providing a
 
 ### Run As: Python Script ###
 
-* Python 3.7.2
+* Python 3.8.3
 
   The following additional modules are required to be installed:
   
@@ -49,6 +49,7 @@ and is to help automate the UAE configuration file creation process, providing a
 UCG supports UAE configuration for the following Amiga game file formats:
 
  - ADF (.adf and .zip)
+ - IPFipfd .zip)
  - WHDload HDF (.hdf)
  - WHDLoad ZIP (.zip)
  - WHDLoad LHA (.lha)
@@ -76,6 +77,12 @@ UCG supports UAE configuration for the following Amiga game file formats:
 However, UAE emulators typically only support up to a maximum of 4 (four) floppy drives - so onlythe first 4 (four) ADF game disk files (.adf or .zio) will be mapped to floppy drives 0 to 3, respectively.
 
 **Note:** Some Amiga games will only recognise/use the the first floppy drive (DF0:) - so you may still need to use the emulator method to swap out the game disk files.
+
+### IPF (.ipf and .zip) files
+
+IPF .ipf and .zip files should be named as per the official CPS naming for that game.
+
+Depending on the game, a .zip will contain one or more .ipf files.
 
 ### WHDLoad HDF (.hdf) files
  
@@ -147,10 +154,14 @@ With that in mind, the recommended and supported file structure should be:
    |                               +---[DIR] aga
    |                               |     +---[DIR] ADF
    |                               |     |     `---[FILE] template.uae
+   |                               |     +---[DIR] IPF
+   |                               |     |     `---[FILE] template.uae
    |                               |     `---[DIR] WHDLoad
    |                               |           `---[FILE] template.uae
    |                               `---[DIR] ocs
    |                                     +---[DIR] ADF
+   |                                     |     `---[FILE] template.uae
+   |                                     +---[DIR] IPF
    |                                     |     `---[FILE] template.uae
    |                                     `---[DIR] WHDLoad
    |                                           `---[FILE] template.uae
