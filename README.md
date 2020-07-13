@@ -49,7 +49,7 @@ and is to help automate the UAE configuration file creation process, providing a
 UCG supports UAE configuration for the following Amiga game file formats:
 
  - ADF (.adf and .zip)
- - IPFipfd .zip)
+ - IPF (.ipf and .zip)
  - WHDload HDF (.hdf)
  - WHDLoad ZIP (.zip)
  - WHDLoad LHA (.lha)
